@@ -39,11 +39,26 @@ body {
     color: #fff;
 }
 
+#chat-container {
+    display: flex;
+}
+
 #messages {
     list-style-type: none;
     margin: 0;
     padding: 0;
+    flex: 1;
 }
+
+#usersConnected {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    flex-shrink: 0;
+    padding: 0.5rem 1rem;
+    padding-left: 1rem; /* Optional: add some spacing between messages and users */
+}
+
 
 #messages>li {
     padding: 0.5rem 1rem;

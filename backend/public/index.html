@@ -7,7 +7,11 @@
 </head>
 
 <body>
-  <ul id="messages"></ul>
+  <div id="chat-container">
+    <ul id="messages"></ul>
+    <ul id="usersConnected">Users Connected</ul>
+  </div>
+
   <form id="form" action="">
     <input id="input" autocomplete="off" /><button>Send</button>
   </form>
@@ -20,24 +24,35 @@
     var socket = io();
 
     socket.emit('join', username);
-  
+
     var messages = document.getElementById('messages');
     var form = document.getElementById('form');
     var input = document.getElementById('input');
-  
-    form.addEventListener('submit', function(e) {
+    var usersConnected = document.getElementById('usersConnected');
+
+    form.addEventListener('submit', function (e) {
       e.preventDefault();
       if (input.value) {
         socket.emit('chat message', input.value, username);
         input.value = '';
       }
     });
-  
-    socket.on('chat message', function(msg, username){
+
+    socket.on('chat message', function (msg, username) {
       var item = document.createElement('li');
       item.textContent = username + ": " + msg;
       messages.appendChild(item);
       window.scrollTo(0, document.body.scrollHeight);
+    });
+
+    socket.on('user join', function (users) {
+      usersConnected.innerHTML = 'Users Connected';
+
+      users.forEach(name => {
+        const listItem = document.createElement('li');
+        listItem.textContent = name;
+        usersConnected.appendChild(listItem);
+      });
     });
   </script>
 </body>

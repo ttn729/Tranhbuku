@@ -19,11 +19,14 @@ io.on('connection', (socket) => {
   socket.on('join', (username) => {
     usernameMap[socket.id] = username;
     io.emit('chat message', username + ' has entered the chat.', 'SYSTEM');
+    io.emit('user join', Object.values(usernameMap));
   });
   
   socket.on('disconnect', () => {
     console.log('user ' + socket.id  + ' has disconnected');
     io.emit('chat message', usernameMap[socket.id] + ' has disconnected.', 'SYSTEM');
+    delete usernameMap[socket.id];
+    io.emit('user join', Object.values(usernameMap));
   });
 
   socket.on('chat message', (msg, username) => {
