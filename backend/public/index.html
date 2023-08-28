@@ -9,7 +9,11 @@
 <body>
   <div id="chat-container">
     <ul id="messages"></ul>
-    <ul id="usersConnected">Users Connected</ul>
+    <div id="left-panel">
+      <ul id="usersConnected">Users Connected</ul>
+      <button id="start-button">Start Game</button>
+      <p id="timer"></p>
+    </div>
   </div>
 
   <form id="form" action="">
@@ -19,7 +23,7 @@
   <script src="/socket.io/socket.io.js"></script>
   <script>
 
-    var username = prompt("What is your username?")
+    var username = prompt("What is your username?", "Anonymous")
 
     var socket = io();
 
@@ -29,6 +33,9 @@
     var form = document.getElementById('form');
     var input = document.getElementById('input');
     var usersConnected = document.getElementById('usersConnected');
+    
+    var button = document.getElementById("start-button");
+    var timer = document.getElementById('timer');
 
     form.addEventListener('submit', function (e) {
       e.preventDefault();
@@ -38,6 +45,10 @@
       }
     });
 
+    button.addEventListener('click', function(e) {
+      socket.emit('start game')
+    })
+
     socket.on('chat message', function (msg, username) {
       var item = document.createElement('li');
       item.textContent = username + ": " + msg;
@@ -45,7 +56,7 @@
       window.scrollTo(0, document.body.scrollHeight);
     });
 
-    socket.on('user join', function (users) {
+    socket.on('update users', function (users) {
       usersConnected.innerHTML = 'Users Connected';
 
       users.forEach(name => {
@@ -54,6 +65,12 @@
         usersConnected.appendChild(listItem);
       });
     });
+
+    socket.on('set timer', function(time) {
+      timer.innerHTML = time;
+      console.log(time);
+    });
+
   </script>
 </body>
 
