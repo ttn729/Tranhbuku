@@ -79,6 +79,21 @@ io.on('connection', (socket) => {
     io.emit('update headers', roundNum, score);
   });
 
+  socket.on('reset game', () => {
+    console.log("We need to reset the game");
+    playerTurn = 0;
+    io.emit('player turn', 0);
+    roundNum = 0;
+    score = 0;
+
+    io.emit('update headers', roundNum, score);
+
+    console.log(playerTurn,roundNum, score );
+    console.log("We have reset the game!");
+
+  });
+
+
   socket.on('join', (username) => {
     usernameMap[socket.id] = username;
     users.push(socket.id);
@@ -124,6 +139,8 @@ io.on('connection', (socket) => {
     }
 
   });
+
+  
 
   socket.on('start game', () => {
     console.log('start game', playerTurn);
