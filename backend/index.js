@@ -68,6 +68,7 @@ io.on('connection', (socket) => {
 
   socket.on('request game state', () => {
     socket.emit('toggle button', !gameStarting);
+    socket.emit('update headers', roundNum, score);
   });
 
   socket.on('join', (username) => {
@@ -94,8 +95,19 @@ io.on('connection', (socket) => {
     if (gameStarting) {
       if (randomWords.includes(msg)) {
         console.log(msg, randomWords.indexOf(msg));
-        correctWords.add(randomWords.indexOf(msg))
-        io.emit('correct words', Array.from(correctWords))
+
+        const prevLength = correctWords.size;
+        correctWords.add(randomWords.indexOf(msg));
+
+        const afterLength = correctWords.size;
+
+        if (afterLength > prevLength) {
+          score += 6
+          io.emit('update headers', roundNum, score);
+        }
+
+
+        io.emit('correct words', Array.from(correctWords));
       }
     }
 
@@ -110,6 +122,10 @@ io.on('connection', (socket) => {
     getWords(DEFAULT_NUM_WORDS);
 
     gameStarting = true;
+
+    roundNum += 1;
+    io.emit('update headers', roundNum, score);
+
     io.emit('toggle button', false);
     startGameTimer();
   });

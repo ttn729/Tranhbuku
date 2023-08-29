@@ -8,7 +8,7 @@
 
 <body>
   <h1>Tranhbuku</h1>
-  <h3>Round: 0 Score: 0</h3>
+  <h3 id="headers">Round: 0 Score: 0</h3>
   <div id="describeWords">
   </div>
 
@@ -42,6 +42,7 @@
     var form = document.getElementById('form');
     var input = document.getElementById('input');
     var usersConnected = document.getElementById('usersConnected');
+    var headers = document.getElementById('headers');
 
     var button = document.getElementById("start-button");
     var timer = document.getElementById('timer');
@@ -81,6 +82,7 @@
       socket.emit('request game state');
     })
 
+
     socket.on('chat message', function (msg, username) {
       var item = document.createElement('li');
       item.textContent = username + ": " + msg;
@@ -107,6 +109,10 @@
       button.disabled = !enabled;
     });
 
+    socket.on('update headers', function(round, score) {
+      headers.innerHTML = 'Round: ' + round + ' Score: ' + score;
+      console.log(round, score);
+    })
 
     socket.on('describe words', function (describeWords) {
       generateCards(describeWords);
