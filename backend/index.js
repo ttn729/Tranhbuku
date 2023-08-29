@@ -38,6 +38,8 @@ async function startGameTimer() {
     if (i == 0) {
       gameStarting = false;
       io.emit('toggle button', true);
+      io.emit('describe words', randomWords);
+      io.emit('correct words', Array.from(correctWords))
     }
     await delay(1000); // Wait for 1 second
   }
@@ -103,7 +105,10 @@ io.on('connection', (socket) => {
     console.log('start game');
     correctWords.clear();
     io.emit('correct words', Array.from(correctWords))
+    io.emit('describe words', []);
+
     getWords(DEFAULT_NUM_WORDS);
+
     gameStarting = true;
     io.emit('toggle button', false);
     startGameTimer();
