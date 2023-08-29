@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <title>Socket.IO chat</title>
+  <title>Tranhbuku</title>
   <link rel="stylesheet" href="./styles.css">
 </head>
 
@@ -24,6 +24,10 @@
   <script>
 
     var username = prompt("What is your username?", "Anonymous")
+
+    if (username.trim() === "") {
+      username = "Anonymous"
+    } 
 
     var socket = io();
 
@@ -49,6 +53,10 @@
       socket.emit('start game')
     })
 
+    socket.on('connect', () => {
+      socket.emit('request game state');
+    }) 
+
     socket.on('chat message', function (msg, username) {
       var item = document.createElement('li');
       item.textContent = username + ": " + msg;
@@ -70,6 +78,10 @@
       timer.innerHTML = time;
       console.log(time);
     });
+
+    socket.on('toggle button', function(enabled){
+      button.disabled = !enabled;
+    })
 
   </script>
 </body>

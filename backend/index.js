@@ -5,6 +5,9 @@ const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
 
+let usernameMap = {}
+let gameStarting = false;
+
 async function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -14,9 +17,18 @@ async function startGameTimer() {
     console.log(i);
     io.emit('set timer', 'Time: ' + i);
 
+    if (i == 0) {
+      gameStarting = false;
+      io.emit('toggle button', true);
+    }
     await delay(1000); // Wait for 1 second
   }
 }
+
+
+
+
+
 
 app.use(express.static('public'));
 
@@ -24,10 +36,12 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/public/index.html');
 });
 
-let usernameMap = {}
-
 io.on('connection', (socket) => {
   console.log('a user connected');
+
+  socket.on('request game state', () => {
+    socket.emit('toggle button', !gameStarting);
+  });
 
   socket.on('join', (username) => {
     usernameMap[socket.id] = username;
@@ -49,15 +63,13 @@ io.on('connection', (socket) => {
   });
 
   socket.on('start game', () => {
-    console.log('start game')
+    console.log('start game');
+    gameStarting = true;
+    io.emit('toggle button', false);
     startGameTimer();
   });
 
-
-
 });
-
-
 
 server.listen(3000, () => {
   console.log('listening on *:3000');
