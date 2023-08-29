@@ -7,6 +7,11 @@
 </head>
 
 <body>
+  <h1>Tranhbuku</h1>
+  <h3>Round: 0 Score: 0</h3>
+  <div id="describeWords">
+  </div>
+
   <div id="chat-container">
     <ul id="messages"></ul>
     <div id="left-panel">
@@ -27,7 +32,7 @@
 
     if (username.trim() === "") {
       username = "Anonymous"
-    } 
+    }
 
     var socket = io();
 
@@ -37,9 +42,28 @@
     var form = document.getElementById('form');
     var input = document.getElementById('input');
     var usersConnected = document.getElementById('usersConnected');
-    
+
     var button = document.getElementById("start-button");
     var timer = document.getElementById('timer');
+
+    // Function to generate the card layout and update the div
+    function generateCards(words) {
+      const describeWordsDiv = document.getElementById('describeWords');
+      describeWordsDiv.innerHTML = ''; // Clear the existing content
+
+      // Create card elements and append them to the div
+      for (let word of words) {
+        const card = document.createElement('div');
+        card.classList.add('card'); // You can style the card using CSS
+
+        const cardContent = document.createElement('div');
+        cardContent.classList.add('card-content'); // Style card content if needed
+        cardContent.textContent = word;
+
+        card.appendChild(cardContent);
+        describeWordsDiv.appendChild(card);
+      }
+    }
 
     form.addEventListener('submit', function (e) {
       e.preventDefault();
@@ -49,19 +73,19 @@
       }
     });
 
-    button.addEventListener('click', function(e) {
+    button.addEventListener('click', function (e) {
       socket.emit('start game')
     })
 
     socket.on('connect', () => {
       socket.emit('request game state');
-    }) 
+    })
 
     socket.on('chat message', function (msg, username) {
       var item = document.createElement('li');
       item.textContent = username + ": " + msg;
       messages.appendChild(item);
-      window.scrollTo(0, document.body.scrollHeight);
+      // window.scrollTo(0, document.body.scrollHeight);
     });
 
     socket.on('update users', function (users) {
@@ -74,14 +98,34 @@
       });
     });
 
-    socket.on('set timer', function(time) {
+    socket.on('set timer', function (time) {
       timer.innerHTML = time;
-      console.log(time);
+      // console.log(time);
     });
 
-    socket.on('toggle button', function(enabled){
+    socket.on('toggle button', function (enabled) {
       button.disabled = !enabled;
-    })
+    });
+
+
+    socket.on('describe words', function (describeWords) {
+      generateCards(describeWords);
+      console.log(describeWords);
+    });
+
+    socket.on('correct words', function (indices) {
+      const cards = document.querySelectorAll('.card'); // Get all card elements
+
+      cards.forEach((card, cardIndex) => {
+        if (indices.includes(cardIndex)) {
+          card.classList.add('highlighted'); // Apply the highlighted class to the correct cards
+        } else {
+          card.classList.remove('highlighted'); // Remove the highlighted class from other cards
+        }
+      });
+
+      console.log(indices);
+    });
 
   </script>
 </body>

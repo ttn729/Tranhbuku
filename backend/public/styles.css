@@ -67,3 +67,20 @@ body {
 #messages>li:nth-child(odd) {
     background: #efefef;
 }
+
+.card {
+    width: calc(20% - 20px); /* Adjust the width as needed */
+    margin: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    display: inline-block;
+    vertical-align: top;
+  }
+  
+  .card-content {
+    text-align: center;
+  }
+
+  .highlighted {
+    background-color: yellow; /* You can choose any color you prefer */
+  }

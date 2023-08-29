@@ -5,16 +5,34 @@ const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
 
-let usernameMap = {}
+const fs = require('fs');
+
+const vocab = fs.readFileSync('vocab.txt', 'utf-8').toString();
+
+var words = [];
+var randomWords = [];
+
+vocab.split('\r\n').forEach(line => {
+  words.push(line);
+})
+
+const DEFAULT_NUM_WORDS = 20;
+const DEFAULT_TURN_TIME = 60;
+
+let usernameMap = {};
+let users = [];
 let gameStarting = false;
+let correctWords = new Set();
+let roundNum = 0;
+let score = 0;
 
 async function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 async function startGameTimer() {
-  for (let i = 60; i >= 0; i--) {
-    console.log(i);
+  for (let i = DEFAULT_TURN_TIME; i >= 0; i--) {
+    // console.log(i);
     io.emit('set timer', 'Time: ' + i);
 
     if (i == 0) {
@@ -25,10 +43,17 @@ async function startGameTimer() {
   }
 }
 
+async function getWords(numWords) {
 
+  randomWords = [];
 
+  for (let i = 0; i < numWords; ++i) {
+    randomWords.push(words[Math.floor(Math.random() * words.length)])
+  }
 
-
+  console.log(randomWords);
+  io.to(users[0]).emit('describe words', randomWords);
+}
 
 app.use(express.static('public'));
 
@@ -45,25 +70,40 @@ io.on('connection', (socket) => {
 
   socket.on('join', (username) => {
     usernameMap[socket.id] = username;
+    users.push(socket.id);
+    socket.data.username = username;
     io.emit('chat message', username + ' has entered the chat.', 'SYSTEM');
     io.emit('update users', Object.values(usernameMap));
   });
   
   socket.on('disconnect', () => {
-    console.log('user ' + socket.id  + ' has disconnected');
+    console.log('user ' + socket.data.username  + ' has disconnected');
     io.emit('chat message', usernameMap[socket.id] + ' has disconnected.', 'SYSTEM');
     delete usernameMap[socket.id];
+    users.splice(users.indexOf(socket.id,1));
+    console.log(users);
     io.emit('update users', Object.values(usernameMap));
   });
 
   socket.on('chat message', (msg, username) => {
-    console.log(typeof username)
     console.log('message: ' + msg + ' username: ' + username);
     io.emit('chat message', msg, username);
+
+    if (gameStarting) {
+      if (randomWords.includes(msg)) {
+        console.log(msg, randomWords.indexOf(msg));
+        correctWords.add(randomWords.indexOf(msg))
+        io.emit('correct words', Array.from(correctWords))
+      }
+    }
+
   });
 
   socket.on('start game', () => {
     console.log('start game');
+    correctWords.clear();
+    io.emit('correct words', Array.from(correctWords))
+    getWords(DEFAULT_NUM_WORDS);
     gameStarting = true;
     io.emit('toggle button', false);
     startGameTimer();
