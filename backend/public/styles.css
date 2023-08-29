@@ -48,6 +48,10 @@ body {
     margin: 0;
     padding: 0;
     flex: 1;
+
+    /*scroll bar */
+    height: 300px;
+    overflow: auto;
 }
 
 #usersConnected {
