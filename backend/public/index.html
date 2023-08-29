@@ -17,6 +17,7 @@
     <div id="left-panel">
       <ul id="usersConnected">Users Connected</ul>
       <button id="start-button">Start Game</button>
+      <button id="skip-button">Skip Turn</button>
       <p id="timer"></p>
     </div>
   </div>
@@ -46,6 +47,7 @@
 
     var button = document.getElementById("start-button");
     var timer = document.getElementById('timer');
+    var skipButton = document.getElementById("skip-button");
 
     // Function to generate the card layout and update the div
     function generateCards(words) {
@@ -73,6 +75,10 @@
         input.value = '';
       }
     });
+
+    skipButton.addEventListener('click', function (e) {
+      socket.emit('skip turn')
+    })
 
     button.addEventListener('click', function (e) {
       socket.emit('start game')
@@ -110,7 +116,13 @@
 
       users.forEach(name => {
         const listItem = document.createElement('li');
-        listItem.textContent = name;
+        if (name === username) {
+          listItem.textContent = "*" + name;
+        }
+        else {
+          listItem.textContent = name;
+        }
+        
         usersConnected.appendChild(listItem);
       });
     });
@@ -122,6 +134,7 @@
 
     socket.on('toggle button', function (enabled) {
       button.disabled = !enabled;
+      skipButton.disabled = !enabled;
     });
 
     socket.on('update headers', function (round, score) {

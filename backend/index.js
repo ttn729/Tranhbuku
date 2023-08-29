@@ -87,6 +87,11 @@ io.on('connection', (socket) => {
     io.emit('chat message', username + ' has entered the chat.', 'SYSTEM');
     io.emit('update users', Object.values(usernameMap));
   });
+
+  socket.on('skip turn', () => {
+    playerTurn = (playerTurn + 1) % users.length;
+    io.emit('player turn', playerTurn);
+  })
   
   socket.on('disconnect', () => {
     console.log('user ' + socket.data.username  + ' has disconnected');
