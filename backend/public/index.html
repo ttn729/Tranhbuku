@@ -82,6 +82,21 @@
       socket.emit('request game state');
     })
 
+    socket.on('player turn', function (turn) {
+      const usersConnected = document.getElementById('usersConnected');
+      const listItems = usersConnected.getElementsByTagName('li');
+
+      for (let i = 0; i < listItems.length; i++) {
+        if (i === turn) {
+          listItems[i].classList.add('highlighted');
+        } else {
+          listItems[i].classList.remove('highlighted');
+        }
+      }
+
+
+      console.log('player turn is: ', turn);
+    });
 
     socket.on('chat message', function (msg, username) {
       var item = document.createElement('li');
@@ -109,7 +124,7 @@
       button.disabled = !enabled;
     });
 
-    socket.on('update headers', function(round, score) {
+    socket.on('update headers', function (round, score) {
       headers.innerHTML = 'Round: ' + round + ' Score: ' + score;
       console.log(round, score);
     })

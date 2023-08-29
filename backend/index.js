@@ -17,8 +17,8 @@ vocab.split('\r\n').forEach(line => {
 })
 
 const DEFAULT_NUM_WORDS = 20;
-const DEFAULT_TURN_TIME = 60;
-
+const DEFAULT_TURN_TIME = 10;
+ 
 let usernameMap = {};
 let users = [];
 let gameStarting = false;
@@ -41,6 +41,7 @@ async function startGameTimer() {
       io.emit('toggle button', true);
       io.emit('describe words', randomWords);
       io.emit('correct words', Array.from(correctWords))
+      io.emit('player turn', playerTurn);
     }
     await delay(1000); // Wait for 1 second
   }
@@ -68,13 +69,20 @@ io.on('connection', (socket) => {
   console.log('a user connected');
 
   socket.on('request game state', () => {
-    socket.emit('toggle button', !gameStarting);
-    socket.emit('update headers', roundNum, score);
+    if (roundNum == 0) {
+      io.emit('player turn', 0);
+    }
+    else {
+      io.emit('player turn', playerTurn);
+    }
+    io.emit('toggle button', !gameStarting);
+    io.emit('update headers', roundNum, score);
   });
 
   socket.on('join', (username) => {
     usernameMap[socket.id] = username;
     users.push(socket.id);
+    console.log("User joined, now new length is " + users.length);
     socket.data.username = username;
     io.emit('chat message', username + ' has entered the chat.', 'SYSTEM');
     io.emit('update users', Object.values(usernameMap));
@@ -84,7 +92,7 @@ io.on('connection', (socket) => {
     console.log('user ' + socket.data.username  + ' has disconnected');
     io.emit('chat message', usernameMap[socket.id] + ' has disconnected.', 'SYSTEM');
     delete usernameMap[socket.id];
-    users.splice(users.indexOf(socket.id,1));
+    users.splice(users.indexOf(socket.id),1);
     console.log(users);
     io.emit('update users', Object.values(usernameMap));
   });
@@ -106,8 +114,6 @@ io.on('connection', (socket) => {
           score += 6
           io.emit('update headers', roundNum, score);
         }
-
-
         io.emit('correct words', Array.from(correctWords));
       }
     }
@@ -118,11 +124,13 @@ io.on('connection', (socket) => {
     console.log('start game', playerTurn);
     correctWords.clear();
     io.emit('correct words', Array.from(correctWords))
-    io.emit('describe words', []);
+    io.emit('describe words', []); // clears everyone board
+
 
     getWords(DEFAULT_NUM_WORDS);
 
     playerTurn = (playerTurn + 1) % users.length;
+    console.log(users);
     console.log("next player is ", playerTurn);
 
     gameStarting = true;
