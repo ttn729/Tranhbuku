@@ -25,6 +25,7 @@ let gameStarting = false;
 let correctWords = new Set();
 let roundNum = 0;
 let score = 0;
+let playerTurn = 0;
 
 async function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -54,7 +55,7 @@ async function getWords(numWords) {
   }
 
   console.log(randomWords);
-  io.to(users[0]).emit('describe words', randomWords);
+  io.to(users[playerTurn]).emit('describe words', randomWords);
 }
 
 app.use(express.static('public'));
@@ -114,12 +115,15 @@ io.on('connection', (socket) => {
   });
 
   socket.on('start game', () => {
-    console.log('start game');
+    console.log('start game', playerTurn);
     correctWords.clear();
     io.emit('correct words', Array.from(correctWords))
     io.emit('describe words', []);
 
     getWords(DEFAULT_NUM_WORDS);
+
+    playerTurn = (playerTurn + 1) % users.length;
+    console.log("next player is ", playerTurn);
 
     gameStarting = true;
 
@@ -132,6 +136,12 @@ io.on('connection', (socket) => {
 
 });
 
+const localIP = '10.204.82.7';
+
 server.listen(3000, () => {
   console.log('listening on *:3000');
 });
+
+// app.listen(3000, localIP, () => {
+//   console.log(`Server is running at http://${localIP}:${3000}`);
+// });
