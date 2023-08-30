@@ -7,7 +7,7 @@ const io = new Server(server);
 
 const fs = require('fs');
 
-const vocab = fs.readFileSync('vocab.txt', 'utf-8').toString();
+const vocab = fs.readFileSync('vietnamese.txt', 'utf-8').toString();
 
 var words = [];
 var randomWords = [];

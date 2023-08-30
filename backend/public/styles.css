@@ -12,6 +12,7 @@ body {
     text-decoration: none;
     display: inline-block;
     font-size: 16px;
+    border-radius: 12px;
 }
 
 .button-green {
@@ -133,9 +134,11 @@ body {
     /* Adjust the width as needed */
     margin: 10px;
     padding: 10px;
-    border: 1px solid #ccc;
+    /*border: 1px solid #ccc; */
+    border: 1px solid black;
     display: inline-block;
     vertical-align: top;
+    border-radius: 12px;
 }
 
 .card-content {

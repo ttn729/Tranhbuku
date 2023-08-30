@@ -80,7 +80,8 @@
 
         const cardContent = document.createElement('div');
         cardContent.classList.add('card-content'); // Style card content if needed
-        cardContent.textContent = word;
+        cardContent.innerHTML = '<strong>' + word.toUpperCase() + '</strong>';
+
 
         card.appendChild(cardContent);
         describeWordsDiv.appendChild(card);
