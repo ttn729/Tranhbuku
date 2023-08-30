@@ -87,6 +87,7 @@ io.on('connection', (socket) => {
     score = 0;
 
     io.emit('update headers', roundNum, score);
+    io.emit('describe words', []); // clears everyone board
 
     console.log(playerTurn,roundNum, score );
     console.log("We have reset the game!");
