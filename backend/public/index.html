@@ -7,20 +7,34 @@
 </head>
 
 <body>
-  <h1>Tranhbuku</h1>
-  <h3 id="headers">Round: 0 Score: 0</h3>
+  <div class="header-container">
+    <div class="header-info">
+      <h1>Tranhbuku</h1>
+      <h3 id="headers">Round: 0 Score: 0</h3>
+    </div>
+
+    <div id="timer" class="numberCircle">0</div>
+
+    <div class="header-buttons">
+      <button id="start-button" class="button button-blue">Start Game</button>
+      <button id="skip-button" class="button button-green">Skip Turn</button>
+      <button id="reset-button" class="button button-red">Reset</button>
+    </div>
+  </div>
+
+
+
+  <!-- <p id="timer"></p> -->
+
   <div id="describeWords">
+
+
   </div>
 
   <div id="chat-container">
     <ul id="messages"></ul>
     <div id="left-panel">
       <ul id="usersConnected">Users Connected</ul>
-      <button id="start-button">Start Game</button>
-      <button id="skip-button">Skip Turn</button>
-      <button id="reset-button">Reset</button>
-
-      <p id="timer"></p>
     </div>
   </div>
 
@@ -81,11 +95,12 @@
     });
 
     skipButton.addEventListener('click', function (e) {
-      socket.emit('skip turn')
+      socket.emit('skip turn');
     })
 
     resetButton.addEventListener('click', function (e) {
-      socket.emit('reset game')
+      messages.innerHTML = '';
+      socket.emit('reset game');
     })
 
 
@@ -121,7 +136,7 @@
       if (highlight) {
         item.classList.add('highlighted');
       }
-    
+
       messages.appendChild(item);
 
       messages.scrollTop = messages.scrollHeight;
@@ -139,7 +154,7 @@
         else {
           listItem.textContent = name;
         }
-        
+
         usersConnected.appendChild(listItem);
       });
     });
@@ -151,7 +166,7 @@
 
     socket.on('toggle button', function (enabled) {
       button.disabled = !enabled;
-      skipButton.disabled = !enabled;      
+      skipButton.disabled = !enabled;
       resetButton.disabled = !enabled;
     });
 

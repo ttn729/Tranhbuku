@@ -34,7 +34,7 @@ async function delay(ms) {
 async function startGameTimer() {
   for (let i = DEFAULT_TURN_TIME; i >= 0; i--) {
     // console.log(i);
-    io.emit('set timer', 'Time: ' + i);
+    io.emit('set timer', i);
 
     if (i == 0) {
       gameStarting = false;
