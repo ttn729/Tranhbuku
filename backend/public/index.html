@@ -114,9 +114,14 @@
       console.log('player turn is: ', turn);
     });
 
-    socket.on('chat message', function (msg, username) {
+    socket.on('chat message', function (msg, username, highlight) {
       var item = document.createElement('li');
       item.textContent = username + ": " + msg;
+
+      if (highlight) {
+        item.classList.add('highlighted');
+      }
+    
       messages.appendChild(item);
 
       messages.scrollTop = messages.scrollHeight;

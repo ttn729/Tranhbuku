@@ -125,7 +125,7 @@ io.on('connection', (socket) => {
     if (gameStarting) {
       if (randomWords.includes(msg)) {
         console.log(msg, randomWords.indexOf(msg));
-        io.emit('chat message', msg, username); // only send the message if it is right
+        io.emit('chat message', msg, username, true); // only send the message if it is right
 
         const prevLength = correctWords.size;
         correctWords.add(randomWords.indexOf(msg));
