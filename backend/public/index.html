@@ -90,6 +90,7 @@
 
 
     button.addEventListener('click', function (e) {
+      messages.innerHTML = '';
       socket.emit('start game')
     })
 
