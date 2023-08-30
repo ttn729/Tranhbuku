@@ -120,11 +120,12 @@ io.on('connection', (socket) => {
 
   socket.on('chat message', (msg, username) => {
     console.log('message: ' + msg + ' username: ' + username);
-    io.emit('chat message', msg, username);
+    
 
     if (gameStarting) {
       if (randomWords.includes(msg)) {
         console.log(msg, randomWords.indexOf(msg));
+        io.emit('chat message', msg, username); // only send the message if it is right
 
         const prevLength = correctWords.size;
         correctWords.add(randomWords.indexOf(msg));
@@ -137,6 +138,9 @@ io.on('connection', (socket) => {
         }
         io.emit('correct words', Array.from(correctWords));
       }
+    }
+    else {
+      io.emit('chat message', msg, username);
     }
 
   });
