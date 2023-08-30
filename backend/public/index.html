@@ -133,11 +133,16 @@
 
     socket.on('chat message', function (msg, username, highlight) {
       var item = document.createElement('li');
-      item.textContent = username + ": " + msg;
+
+      var textElement = document.createElement('span'); // Create a <span> element for text content
+
+      textElement.textContent = username + ": " + msg;
 
       if (highlight) {
-        item.classList.add('highlighted');
+        textElement.classList.add('highlighted');
       }
+
+      item.append(textElement);
 
       messages.appendChild(item);
 
