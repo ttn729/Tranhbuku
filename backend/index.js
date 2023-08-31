@@ -4,7 +4,6 @@ const http = require('http');
 const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
-
 const fs = require('fs');
 
 const vocab = fs.readFileSync('vietnamese.txt', 'utf-8').toString();
@@ -19,7 +18,6 @@ vocab.split('\r\n').forEach(line => {
 const DEFAULT_NUM_WORDS = 20;
 const DEFAULT_TURN_TIME = 10;
  
-let usernameMap = {};
 let users = [];
 let gameStarting = false;
 let correctWords = new Set();
@@ -41,7 +39,13 @@ async function startGameTimer() {
       io.emit('toggle button', true);
       io.emit('describe words', randomWords);
       io.emit('correct words', Array.from(correctWords))
+
+      playerTurn = (playerTurn + 1) % users.length;
+      console.log("next player is ", playerTurn);
+
       io.emit('player turn', playerTurn);
+
+      
     }
     await delay(1000); // Wait for 1 second
   }
@@ -56,7 +60,7 @@ async function getWords(numWords) {
   }
 
   console.log(randomWords);
-  io.to(users[playerTurn]).emit('describe words', randomWords);
+  io.to(users[playerTurn].id).emit('describe words', randomWords);
 }
 
 app.use(express.static('public'));
@@ -96,12 +100,21 @@ io.on('connection', (socket) => {
 
 
   socket.on('join', (username) => {
-    usernameMap[socket.id] = username;
-    users.push(socket.id);
+    users.push(socket);
     console.log("User joined, now new length is " + users.length);
     socket.data.username = username;
+    socket.data.guesserPoints = 0;
+    socket.data.describerPoints = 0;
+
+    io.emit('leaderboard info', users.map(user => ({
+      username: user.data.username,
+      guesserPoints: user.data.guesserPoints,
+      describerPoints: user.data.describerPoints
+      // ... other necessary properties
+    })));
+
     io.emit('chat message', username + ' has entered the chat.', 'SYSTEM');
-    io.emit('update users', Object.values(usernameMap));
+    io.emit('update users', users.map(socket => socket.data.username));
   });
 
   socket.on('skip turn', () => {
@@ -111,11 +124,17 @@ io.on('connection', (socket) => {
   
   socket.on('disconnect', () => {
     console.log('user ' + socket.data.username  + ' has disconnected');
-    io.emit('chat message', usernameMap[socket.id] + ' has disconnected.', 'SYSTEM');
-    delete usernameMap[socket.id];
-    users.splice(users.indexOf(socket.id),1);
+    io.emit('chat message', socket.data.username + ' has disconnected.', 'SYSTEM');
+    users.splice(users.indexOf(socket.id),1); // delete socket on disconnect
     console.log(users);
-    io.emit('update users', Object.values(usernameMap));
+    io.emit('update users', users.map(socket => socket.data.username));
+
+    io.emit('leaderboard info', users.map(user => ({
+      username: user.data.username,
+      guesserPoints: user.data.guesserPoints,
+      describerPoints: user.data.describerPoints
+    })));
+
   });
 
   socket.on('chat message', (msg, username) => {
@@ -125,7 +144,7 @@ io.on('connection', (socket) => {
     if (gameStarting) {
       if (randomWords.includes(msg)) {
         console.log(msg, randomWords.indexOf(msg));
-        io.emit('chat message', msg, username, true); // only send the message if it is right
+        io.emit('chat message', msg, username, true, socket.id); // only send the message if it is right
 
         const prevLength = correctWords.size;
         correctWords.add(randomWords.indexOf(msg));
@@ -133,8 +152,24 @@ io.on('connection', (socket) => {
         const afterLength = correctWords.size;
 
         if (afterLength > prevLength) {
+          
+          socket.data.guesserPoints += 6;
+          users[playerTurn].data.describerPoints += 6;
+
+          console.log(socket.data.username, "got the gueseser points");
+          console.log(users[playerTurn].data.username, "got the describer points");
+
+
           score += 6
           io.emit('update headers', roundNum, score);
+
+          io.emit('leaderboard info', users.map(user => ({
+            username: user.data.username,
+            guesserPoints: user.data.guesserPoints,
+            describerPoints: user.data.describerPoints
+            // ... other necessary properties
+          })));
+
         }
         io.emit('correct words', Array.from(correctWords));
       }
@@ -156,9 +191,7 @@ io.on('connection', (socket) => {
 
     getWords(DEFAULT_NUM_WORDS);
 
-    playerTurn = (playerTurn + 1) % users.length;
-    console.log(users);
-    console.log("next player is ", playerTurn);
+
 
     gameStarting = true;
 
@@ -167,16 +200,12 @@ io.on('connection', (socket) => {
 
     io.emit('toggle button', false);
     startGameTimer();
+
+
   });
 
 });
 
-const localIP = '10.204.82.7';
-
 server.listen(3000, () => {
   console.log('listening on *:3000');
 });
-
-// app.listen(3000, localIP, () => {
-//   console.log(`Server is running at http://${localIP}:${3000}`);
-// });

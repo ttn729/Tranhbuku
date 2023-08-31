@@ -15,6 +15,11 @@ body {
     border-radius: 12px;
 }
 
+.rounded {
+    border-radius: 16px;
+    padding: 4px;
+}
+
 .button-green {
     background-color: #4CAF50;
     /* Green */
@@ -119,9 +124,9 @@ body {
     padding: 0.5rem 1rem;
 }
 
-#messages>li:nth-child(odd) {
+/* #messages>li:nth-child(odd) {
     background: #efefef;
-}
+} */
 
 /* Apply the highlighted styling with higher specificity */
 #messages>li.highlighted {

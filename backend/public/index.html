@@ -22,24 +22,25 @@
     </div>
   </div>
 
-
-
   <!-- <p id="timer"></p> -->
 
   <div id="describeWords">
-
-
   </div>
 
   <div id="chat-container">
     <ul id="messages"></ul>
+    <div>
+      <h1>Leaderboard</h1>
+      <h3 id="guesser-board">Guessers</h3>
+      <h3 id="describer-board">Describers</h3>
+    </div>
     <div id="left-panel">
       <ul id="usersConnected">Users Connected</ul>
     </div>
   </div>
 
   <form id="form" action="">
-    <input id="input" autocomplete="off" placeholder="Type the words you guess here"/>
+    <input id="input" autocomplete="off" placeholder="Type the words you guess here" />
     <button>Send</button>
   </form>
 
@@ -115,6 +116,30 @@
       socket.emit('request game state');
     })
 
+    socket.on('leaderboard info', (users) => {
+      var sortByGuesserPoints = users.sort((a, b) => b.guesserPoints - a.guesserPoints);
+      var sortByDescriberPoints = users.sort((a, b) => b.describerPoints - a.describerPoints);
+
+      var guesserBoard = document.getElementById('guesser-board');
+      var describerBoard = document.getElementById('describer-board');
+
+      guesserBoard.innerHTML = 'Guessers';
+      describerBoard.innerHTML = 'Describers';
+
+      sortByGuesserPoints.forEach(user => {
+        const userEntry = document.createElement('div');
+        userEntry.textContent = `${user.username}: ${user.guesserPoints}`;
+        guesserBoard.appendChild(userEntry);
+      });
+
+
+      sortByDescriberPoints.forEach(user => {
+        const userEntry = document.createElement('div');
+        userEntry.textContent = `${user.username}: ${user.describerPoints}`;
+        describerBoard.appendChild(userEntry);
+      });
+    });
+
     socket.on('player turn', function (turn) {
       const usersConnected = document.getElementById('usersConnected');
       const listItems = usersConnected.getElementsByTagName('li');
@@ -131,16 +156,27 @@
       console.log('player turn is: ', turn);
     });
 
-    socket.on('chat message', function (msg, username, highlight) {
+    socket.on('chat message', function (msg, username, highlight, socketId) {
       var item = document.createElement('li');
 
       var textElement = document.createElement('span'); // Create a <span> element for text content
 
-      textElement.textContent = username + ": " + msg;
+      console.log(socket.id);
+      var textElement_name = document.createElement('span');
+      textElement_name.textContent = username + ": ";
+
+      var textElement_message = document.createElement('span');
+      textElement_message.textContent = msg;
+
+      textElement.append(textElement_name);
+      textElement.append(textElement_message);
+
 
       if (highlight) {
-        textElement.classList.add('highlighted');
+        textElement_message.classList.add('highlighted');
       }
+
+      textElement_message.classList.add('rounded');
 
       item.append(textElement);
 
@@ -151,6 +187,7 @@
     });
 
     socket.on('update users', function (users) {
+      console.log('Users are ', users);
       usersConnected.innerHTML = 'Users Connected';
 
       users.forEach(name => {
