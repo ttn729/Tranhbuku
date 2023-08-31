@@ -98,6 +98,26 @@ body {
     display: flex;
 }
 
+.leaderboard {
+    align-content: center;
+}
+
+.leaderboard-title {
+    text-align: center;
+}
+
+.leaderboard-container {
+    display: flex;
+}
+
+.guesser-board, .describer-board {
+    flex: 1;
+    float: left;
+    padding: 0px 20px;
+}
+
+
+
 #messages {
     list-style-type: none;
     margin: 0;

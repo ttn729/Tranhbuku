@@ -113,7 +113,7 @@ io.on('connection', (socket) => {
       // ... other necessary properties
     })));
 
-    io.emit('chat message', username + ' has entered the chat.', 'SYSTEM');
+    // io.emit('chat message', username + ' has entered the chat.', 'SYSTEM');
     io.emit('update users', users.map(socket => socket.data.username));
   });
 
@@ -173,11 +173,10 @@ io.on('connection', (socket) => {
         }
         io.emit('correct words', Array.from(correctWords));
       }
+      else {
+        io.emit('chat message', msg, username, false, socket.id); // only send the message if it is right
+      }
     }
-    else {
-      io.emit('chat message', msg, username);
-    }
-
   });
 
   

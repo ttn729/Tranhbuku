@@ -29,10 +29,14 @@
 
   <div id="chat-container">
     <ul id="messages"></ul>
-    <div>
-      <h1>Leaderboard</h1>
-      <h3 id="guesser-board">Guessers</h3>
-      <h3 id="describer-board">Describers</h3>
+    <div class="leaderboard">
+      <h1 class="leaderboard-title">Leaderboard</h1>
+
+      <div class="leaderboard-container">
+        <h3 id="guesser-board" class="guesser-board">Guessers</h3>
+        <h3 id="describer-board" class="describer-board">Describers</h3>
+      </div>
+
     </div>
     <div id="left-panel">
       <ul id="usersConnected">Users Connected</ul>
@@ -109,6 +113,7 @@
 
     button.addEventListener('click', function (e) {
       messages.innerHTML = '';
+      userChats = {};
       socket.emit('start game')
     })
 
@@ -156,21 +161,46 @@
       console.log('player turn is: ', turn);
     });
 
+    // socket.on('chat message', function (msg, username, highlight, socketId) {
+    //   var item = document.createElement('li');
+
+    //   var textElement = document.createElement('span'); // Create a <span> element for text content
+
+    //   console.log(socket.id);
+    //   var textElement_name = document.createElement('span');
+    //   textElement_name.textContent = username + ": ";
+
+    //   var textElement_message = document.createElement('span');
+    //   textElement_message.textContent = msg;
+
+    //   textElement.append(textElement_name);
+    //   textElement.append(textElement_message);
+
+
+    //   if (highlight) {
+    //     textElement_message.classList.add('highlighted');
+    //   }
+
+    //   textElement_message.classList.add('rounded');
+
+    //   item.append(textElement);
+
+    //   messages.appendChild(item);
+
+    //   messages.scrollTop = messages.scrollHeight;
+    //   // window.scrollTo(0, document.body.scrollHeight);
+    // });
+
+
+    // Create a data structure to track existing user chats and their <li> elements
+    var userChats = {};
+
     socket.on('chat message', function (msg, username, highlight, socketId) {
-      var item = document.createElement('li');
-
-      var textElement = document.createElement('span'); // Create a <span> element for text content
-
-      console.log(socket.id);
       var textElement_name = document.createElement('span');
       textElement_name.textContent = username + ": ";
 
       var textElement_message = document.createElement('span');
       textElement_message.textContent = msg;
-
-      textElement.append(textElement_name);
-      textElement.append(textElement_message);
-
 
       if (highlight) {
         textElement_message.classList.add('highlighted');
@@ -178,13 +208,30 @@
 
       textElement_message.classList.add('rounded');
 
-      item.append(textElement);
+      var chatKey = socketId; // You can use a unique identifier for the user, like their username
 
-      messages.appendChild(item);
+      if (userChats[chatKey]) {
+        // User's chat already exists, append the new message to the existing <li>
+        var existingLi = userChats[chatKey];
+        existingLi.appendChild(textElement_message);
+      } else {
+        // User's chat doesn't exist, create a new <li> and add it to the data structure
+        var item = document.createElement('li');
+        var textElement = document.createElement('span');
+
+        textElement.appendChild(textElement_name);
+        textElement.appendChild(textElement_message);
+
+        item.appendChild(textElement);
+        messages.appendChild(item);
+
+        // Store the new <li> in the data structure
+        userChats[chatKey] = item;
+      }
 
       messages.scrollTop = messages.scrollHeight;
-      // window.scrollTo(0, document.body.scrollHeight);
     });
+
 
     socket.on('update users', function (users) {
       console.log('Users are ', users);
