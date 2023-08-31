@@ -12,7 +12,7 @@ var words = [];
 var randomWords = [];
 
 vocab.split('\r\n').forEach(line => {
-  words.push(line);
+  words.push(line.trim().toLowerCase());
 })
 
 const DEFAULT_NUM_WORDS = 20;
@@ -44,8 +44,6 @@ async function startGameTimer() {
       console.log("next player is ", playerTurn);
 
       io.emit('player turn', playerTurn);
-
-      
     }
     await delay(1000); // Wait for 1 second
   }
@@ -142,7 +140,7 @@ io.on('connection', (socket) => {
     
 
     if (gameStarting) {
-      if (randomWords.includes(msg)) {
+      if (randomWords.includes(msg.trim().toLowerCase())) {
         console.log(msg, randomWords.indexOf(msg));
         io.emit('chat message', msg, username, true, socket.id); // only send the message if it is right
 
