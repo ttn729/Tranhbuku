@@ -8,7 +8,7 @@
 
 <body>
 
-<div class="game">
+<div class="game" id="game">
   <div class="header-container">
     <div class="header-info">
       <h1>Tranhbuku</h1>
@@ -23,8 +23,6 @@
       <button id="reset-button" class="button button-red">Reset</button>
     </div>
   </div>
-
-  <!-- <p id="timer"></p> -->
 
   <div id="describeWords">
   </div>
@@ -51,18 +49,33 @@
   </form>
  </div>
 
+ <div class="login" id="login">
+  <h1>Welcome to Tranhbuku!</h1>
+  <form id="login_form" action="">
+    <input id="login_name" autocomplete="off" placeholder="Name" />
+    <input id="login_room" autocomplete="off" placeholder="Room" />
+    <button>Send</button>
+  </form>
+ </div>
+
   <script src="/socket.io/socket.io.js"></script>
   <script>
-
-    var username = prompt("What is your username?", "Anonymous")
-
-    if (username.trim() === "") {
-      username = "Anonymous"
-    }
-
     var socket = io();
 
-    socket.emit('join', username);
+    var loginForm = document.getElementById('login_form');
+    var username = document.getElementById('login_name');
+    var loginRoom = document.getElementById('login_room');
+    var game = document.getElementById('game');
+
+
+    loginForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      if (username && loginRoom) {
+        socket.emit('join', username.value);
+        game.style.display = 'block';
+        document.getElementById('login').style.display = 'none';
+      }
+    });
 
     var messages = document.getElementById('messages');
     var form = document.getElementById('form');
@@ -163,37 +176,6 @@
 
       console.log('player turn is: ', turn);
     });
-
-    // socket.on('chat message', function (msg, username, highlight, socketId) {
-    //   var item = document.createElement('li');
-
-    //   var textElement = document.createElement('span'); // Create a <span> element for text content
-
-    //   console.log(socket.id);
-    //   var textElement_name = document.createElement('span');
-    //   textElement_name.textContent = username + ": ";
-
-    //   var textElement_message = document.createElement('span');
-    //   textElement_message.textContent = msg;
-
-    //   textElement.append(textElement_name);
-    //   textElement.append(textElement_message);
-
-
-    //   if (highlight) {
-    //     textElement_message.classList.add('highlighted');
-    //   }
-
-    //   textElement_message.classList.add('rounded');
-
-    //   item.append(textElement);
-
-    //   messages.appendChild(item);
-
-    //   messages.scrollTop = messages.scrollHeight;
-    //   // window.scrollTo(0, document.body.scrollHeight);
-    // });
-
 
     // Create a data structure to track existing user chats and their <li> elements
     var userChats = {};
