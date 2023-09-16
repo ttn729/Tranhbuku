@@ -232,7 +232,7 @@
         userChats[chatKey] = item;
       }
 
-      messages.scrollTop = messages.scrollHeight;
+      //messages.scrollTop = messages.scrollHeight;
     });
 
 
@@ -259,6 +259,7 @@
     });
 
     socket.on('toggle button', function (enabled) {
+      messages.innerHTML = '';
       button.disabled = !enabled;
       skipButton.disabled = !enabled;
       resetButton.disabled = !enabled;

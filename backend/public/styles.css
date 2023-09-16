@@ -147,6 +147,7 @@ body {
 
 #messages>li {
     padding: 0.5rem 1rem;
+    margin: 10px;
 }
 
 /* #messages>li:nth-child(odd) {

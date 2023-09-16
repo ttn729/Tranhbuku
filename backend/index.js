@@ -11,12 +11,12 @@ const vocab = fs.readFileSync('vietnamese.txt', 'utf-8').toString();
 var words = [];
 var randomWords = [];
 
-vocab.split('\r\n').forEach(line => {
+vocab.split('\n').forEach(line => {
   words.push(line.trim().toLowerCase());
 })
 
 const DEFAULT_NUM_WORDS = 20;
-const DEFAULT_TURN_TIME = 10;
+const DEFAULT_TURN_TIME = 120;
  
 let users = [];
 let gameStarting = false;
