@@ -65,10 +65,11 @@ class Game {
     }
   }
 
-  processChat(msg, username, io, roomname, socket) {
+  processChat(msg, io, socket) {
+    var roomname = socket.data.roomname;
     if (this.gameStarting) {
       const isCorrect = this.randomWords.includes(msg.trim().toLowerCase());
-      io.to(roomname).emit('chat message', msg, username, isCorrect, socket.id); // only send the message if it is right
+      io.to(roomname).emit('chat message', msg, socket.data.username, isCorrect, socket.id); // only send the message if it is right
 
       if (isCorrect) {
         const prevLength = this.correctWords.size;
@@ -179,8 +180,8 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('chat message', (msg, username) => {
-    roomGameMap[socket.data.roomname].processChat(msg, username, io, socket.data.roomname, socket);
+  socket.on('chat message', (msg) => {
+    roomGameMap[socket.data.roomname].processChat(msg, io, socket);
   });
 
   socket.on('start game', () => {
