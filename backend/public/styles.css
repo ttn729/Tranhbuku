@@ -132,16 +132,7 @@ body {
 
 
 
-#messages {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
-    flex: 1;
 
-    /*scroll bar */
-    height: 300px;
-    overflow: auto;
-}
 
 #usersConnected {
     list-style-type: none;
@@ -154,19 +145,30 @@ body {
 }
 
 
-#messages>li {
-    padding: 0.5rem 1rem;
-    margin: 10px;
+#messages {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    flex: 1;
+
+    max-width: 80%;
+    border: 1px solid darkblue;
 }
 
-/* #messages>li:nth-child(odd) {
-    background: #efefef;
-} */
+
+#messages>li>span {
+    display: inline-block;
+    white-space: nowrap;
+    overflow: hidden;
+    max-width: 100%;
+    padding: 0.5rem 1rem;
+    margin-bottom: 10px;
+}
+
 
 /* Apply the highlighted styling with higher specificity */
 #messages>li.highlighted {
     background-color: #90ee90;
-    /* Your preferred color */
 }
 
 .card {

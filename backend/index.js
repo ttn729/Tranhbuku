@@ -7,7 +7,7 @@ const io = new Server(server);
 const fs = require('fs');
 
 const DEFAULT_NUM_WORDS = 20;
-const DEFAULT_TURN_TIME = 10;
+const DEFAULT_TURN_TIME = 120;
 const vocab = fs.readFileSync('vietnamese.txt', 'utf-8').toString();
 
 class Game {

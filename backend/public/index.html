@@ -113,7 +113,7 @@
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       if (input.value) {
-        socket.emit('chat message', input.value, username);
+        socket.emit('chat message', input.value, username.value);
         input.value = '';
       }
     });
@@ -177,6 +177,7 @@
     var userChats = {};
 
     socket.on('chat message', function (msg, username, highlight, socketId) {
+      console.log("The usernname is",username);
       var textElement_name = document.createElement('span');
       textElement_name.textContent = username + ": ";
 
@@ -212,8 +213,6 @@
         // Store the new <li> in the data structure
         userChats[chatKey] = item;
       }
-
-      //messages.scrollTop = messages.scrollHeight;
     });
 
 
