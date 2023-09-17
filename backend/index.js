@@ -107,8 +107,9 @@ async function startGameTimer(roomname) {
       io.to(roomname).emit('describe words', roomGameMap[roomname].randomWords);
       io.to(roomname).emit('correct words', Array.from(roomGameMap[roomname].correctWords))
 
-      roomGameMap[roomname].skipTurn();
       io.to(roomname).emit('player turn', roomGameMap[roomname].playerTurn);
+      roomGameMap[roomname].skipTurn();
+
     }
     await delay(1000); // Wait for 1 second
   }
@@ -122,6 +123,7 @@ function update(roomname) {
   })));
   io.to(roomname).emit('update headers', roomGameMap[roomname].roundNum, roomGameMap[roomname].score);
   io.to(roomname).emit('update users', roomGameMap[roomname].users.map(socket => socket.data.username));
+  io.to(roomname).emit('player turn', roomGameMap[roomname].playerTurn);
 }
 
 app.use(express.static('public'));
@@ -178,8 +180,11 @@ io.on('connection', (socket) => {
   });
 
   socket.on('start game', () => {
-    roomGameMap[socket.data.roomname].start(io, socket.data.roomname);
-    startGameTimer(socket.data.roomname);
+    if (socket.data.roomname in roomGameMap) {
+      roomGameMap[socket.data.roomname].start(io, socket.data.roomname);
+      startGameTimer(socket.data.roomname);
+    }
+
   });
 });
 
