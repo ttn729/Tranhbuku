@@ -54,6 +54,12 @@
   <form id="login_form" action="">
     <input id="login_name" autocomplete="off" placeholder="Name" />
     <input id="login_room" autocomplete="off" placeholder="Room" />
+
+    <select id="language_select">
+      <option value="vi">Vietnamese</option>
+      <option value="en">English</option>
+    </select>
+
     <button>Send</button>
   </form>
  </div>
@@ -65,13 +71,15 @@
     var loginForm = document.getElementById('login_form');
     var username = document.getElementById('login_name');
     var loginRoom = document.getElementById('login_room');
+    var languageSelect = document.getElementById('language_select');
+
     var game = document.getElementById('game');
 
 
     loginForm.addEventListener('submit', function (e) {
       e.preventDefault();
       if (username && loginRoom) {
-        socket.emit('join', username.value, loginRoom.value);
+        socket.emit('join', username.value, loginRoom.value, languageSelect.value);
         game.style.display = 'block';
         document.getElementById('login').style.display = 'none';
         socket.emit('request game state');

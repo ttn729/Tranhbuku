@@ -8,7 +8,10 @@ const fs = require('fs');
 
 const DEFAULT_NUM_WORDS = 20;
 const DEFAULT_TURN_TIME = 120;
-const vocab = fs.readFileSync('vietnamese.txt', 'utf-8').toString();
+
+const vietnamese = fs.readFileSync('vietnamese.txt', 'utf-8').toString();
+const english = fs.readFileSync('vocab.txt', 'utf-8').toString();
+
 
 class Game {
   constructor(vocab) {
@@ -147,7 +150,7 @@ io.on('connection', (socket) => {
   });
 
 
-  socket.on('join', (username, roomname) => {
+  socket.on('join', (username, roomname, language) => {
     socket.data.username = username;
     socket.data.guesserPoints = 0;
     socket.data.describerPoints = 0;
@@ -156,7 +159,12 @@ io.on('connection', (socket) => {
     socket.join(roomname);
 
     if (!(roomname in roomGameMap)) {
-      roomGameMap[roomname] = new Game(vocab)
+      if (language === 'en') {
+        roomGameMap[roomname] = new Game(english)
+      }
+      else if (language === 'vi') {
+        roomGameMap[roomname] = new Game(vietnamese)
+      }
     }
 
     roomGameMap[roomname].users.push(socket);
