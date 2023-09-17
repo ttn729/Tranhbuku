@@ -102,16 +102,16 @@ async function startGameTimer(roomname) {
   for (let i = DEFAULT_TURN_TIME; i >= 0; i--) {
     io.to(roomname).emit('set timer', i);
 
-    if (i == 0) {
+    if (i === 0) {
       roomGameMap[roomname].gameStarting = false;
       io.to(roomname).emit('toggle button', true);
 
       console.log(roomGameMap[roomname].randomWords);
       io.to(roomname).emit('describe words', roomGameMap[roomname].randomWords);
       io.to(roomname).emit('correct words', Array.from(roomGameMap[roomname].correctWords))
-
-      io.to(roomname).emit('player turn', roomGameMap[roomname].playerTurn);
+    
       roomGameMap[roomname].skipTurn();
+      io.to(roomname).emit('player turn', roomGameMap[roomname].playerTurn);
 
     }
     await delay(1000); // Wait for 1 second
