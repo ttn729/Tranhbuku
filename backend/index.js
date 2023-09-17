@@ -6,201 +6,179 @@ const { Server } = require("socket.io");
 const io = new Server(server);
 const fs = require('fs');
 
+const DEFAULT_NUM_WORDS = 20;
+const DEFAULT_TURN_TIME = 10;
 const vocab = fs.readFileSync('vietnamese.txt', 'utf-8').toString();
 
-var words = [];
-var randomWords = [];
+class Game {
+  constructor(vocab) {
+    this.words = vocab.split('\n').map(line => line.trim().toLowerCase());
+    this.randomWords = [];
+    this.users = [];
+    this.gameStarting = false;
+    this.correctWords = new Set();
+    this.roundNum = 0;
+    this.score = 0;
+    this.playerTurn = 0;
+  }
 
-vocab.split('\n').forEach(line => {
-  words.push(line.trim().toLowerCase());
-})
+  skipTurn() {
+    this.playerTurn = (this.playerTurn + 1) % this.users.length;
+  }
 
-const DEFAULT_NUM_WORDS = 20;
-const DEFAULT_TURN_TIME = 120;
- 
-let users = [];
-let gameStarting = false;
-let correctWords = new Set();
-let roundNum = 0;
-let score = 0;
-let playerTurn = 0;
+  disconnect(socket) {
+    this.users.splice(this.users.indexOf(socket.id), 1); // delete socket on disconnect
+  }
+
+  reset() {
+    this.playerTurn = 0;
+    this.roundNum = 0;
+    this.score = 0;
+  }
+
+  start(io, roomname) {
+    this.correctWords.clear();
+    this.gameStarting = true;
+    this.roundNum += 1;
+
+    io.to(roomname).emit('correct words', Array.from(this.correctWords))
+    io.to(roomname).emit('describe words', []); // clears everyone board
+    io.to(roomname).emit('update headers', this.roundNum, this.score);
+    io.to(roomname).emit('toggle button', false);
+
+    this.getWords(DEFAULT_NUM_WORDS);
+    console.log(this.randomWords);
+    io.to(roomGameMap[roomname].users[roomGameMap[roomname].playerTurn].id).emit('describe words', this.randomWords);
+  }
+
+  getWords(numWords) {
+    console.log("We called getWords", numWords);
+    this.randomWords = [];
+    for (let i = 0; i < numWords; ++i) {
+      this.randomWords.push(this.words[Math.floor(Math.random() * this.words.length)]);
+      console.log(this.randomWords,i , numWords);
+    }
+
+  }
+
+  processChat(msg, username, io, roomname, socket) {
+
+    if (this.gameStarting) {
+      if (this.randomWords.includes(msg.trim().toLowerCase())) {
+        io.to(roomname).emit('chat message', msg, username, true, socket.id); // only send the message if it is right
+
+        const prevLength = this.correctWords.size;
+        this.correctWords.add(this.randomWords.indexOf(msg));
+        const afterLength = this.correctWords.size;
+
+        if (afterLength > prevLength) {
+          socket.data.guesserPoints += 6;
+          this.users[this.playerTurn].data.describerPoints += 6;
+          this.score += 6
+
+          update(roomname);
+        }
+
+        io.to(roomname).emit('correct words', Array.from(this.correctWords));
+      }
+      else {
+        io.to(roomname).emit('chat message', msg, username, false, socket.id); // only send the message if it is right
+      }
+    }
+
+  }
+}
+
+var roomGameMap = {};
 
 async function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function startGameTimer() {
+async function startGameTimer(roomname) {
   for (let i = DEFAULT_TURN_TIME; i >= 0; i--) {
-    // console.log(i);
-    io.emit('set timer', i);
+    io.to(roomname).emit('set timer', i);
 
     if (i == 0) {
-      gameStarting = false;
-      io.emit('toggle button', true);
-      io.emit('describe words', randomWords);
-      io.emit('correct words', Array.from(correctWords))
+      roomGameMap[roomname].gameStarting = false;
+      io.to(roomname).emit('toggle button', true);
 
-      playerTurn = (playerTurn + 1) % users.length;
-      console.log("next player is ", playerTurn);
+      console.log(roomGameMap[roomname].randomWords);
+      io.to(roomname).emit('describe words', roomGameMap[roomname].randomWords);
+      io.to(roomname).emit('correct words', Array.from(roomGameMap[roomname].correctWords))
 
-      io.emit('player turn', playerTurn);
+      roomGameMap[roomname].skipTurn();
+      io.to(roomname).emit('player turn', roomGameMap[roomname].playerTurn);
     }
     await delay(1000); // Wait for 1 second
   }
 }
 
-async function getWords(numWords) {
-
-  randomWords = [];
-
-  for (let i = 0; i < numWords; ++i) {
-    randomWords.push(words[Math.floor(Math.random() * words.length)])
-  }
-
-  console.log(randomWords);
-  io.to(users[playerTurn].id).emit('describe words', randomWords);
+function update(roomname) {
+  io.to(roomname).emit('leaderboard info', roomGameMap[roomname].users.map(user => ({
+    username: user.data.username,
+    guesserPoints: user.data.guesserPoints,
+    describerPoints: user.data.describerPoints
+  })));
+  io.to(roomname).emit('update headers', roomGameMap[roomname].roundNum, roomGameMap[roomname].score);
+  io.to(roomname).emit('update users', roomGameMap[roomname].users.map(socket => socket.data.username));
 }
 
 app.use(express.static('public'));
-
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/public/index.html');
 });
 
 io.on('connection', (socket) => {
-  console.log('a user connected');
 
   socket.on('request game state', () => {
-    if (roundNum == 0) {
-      io.emit('player turn', 0);
-    }
-    else {
-      io.emit('player turn', playerTurn);
-    }
-    io.emit('toggle button', !gameStarting);
-    io.emit('update headers', roundNum, score);
+    io.to(socket.data.roomname).emit('player turn', roomGameMap[socket.data.roomname].playerTurn);
+    io.to(socket.data.roomname).emit('toggle button', !roomGameMap[socket.data.roomname].gameStarting);
+    io.to(socket.data.roomname).emit('update headers', roomGameMap[socket.data.roomname].roundNum, roomGameMap[socket.data.roomname].score);
   });
 
   socket.on('reset game', () => {
-    console.log("We need to reset the game");
-    playerTurn = 0;
-    io.emit('player turn', 0);
-    roundNum = 0;
-    score = 0;
-
-    io.emit('update headers', roundNum, score);
-    io.emit('describe words', []); // clears everyone board
-
-    console.log(playerTurn,roundNum, score );
-    console.log("We have reset the game!");
-
+    roomGameMap[socket.data.roomname].reset();
+    io.to(socket.data.roomname).emit('player turn', 0);
+    io.to(socket.data.roomname).emit('update headers', roomGameMap[socket.data.roomname].roundNum, roomGameMap[socket.data.roomname].score);
+    io.to(socket.data.roomname).emit('describe words', []); // clears everyone board
   });
 
 
-  socket.on('join', (username) => {
-    users.push(socket);
-    console.log("User joined, now new length is " + users.length);
+  socket.on('join', (username, roomname) => {
     socket.data.username = username;
     socket.data.guesserPoints = 0;
     socket.data.describerPoints = 0;
 
-    io.emit('leaderboard info', users.map(user => ({
-      username: user.data.username,
-      guesserPoints: user.data.guesserPoints,
-      describerPoints: user.data.describerPoints
-      // ... other necessary properties
-    })));
+    socket.data.roomname = roomname;
+    socket.join(roomname);
 
-    // io.emit('chat message', username + ' has entered the chat.', 'SYSTEM');
-    io.emit('update users', users.map(socket => socket.data.username));
+    if (!(roomname in roomGameMap)) {
+      roomGameMap[roomname] = new Game(vocab)
+    }
+
+    roomGameMap[roomname].users.push(socket);
+    update(roomname);
   });
 
   socket.on('skip turn', () => {
-    playerTurn = (playerTurn + 1) % users.length;
-    io.emit('player turn', playerTurn);
+    roomGameMap[socket.data.roomname].skipTurn();
+    io.to(socket.data.roomname).emit('player turn', roomGameMap[socket.data.roomname].playerTurn);
   })
-  
+
   socket.on('disconnect', () => {
-    console.log('user ' + socket.data.username  + ' has disconnected');
-    io.emit('chat message', socket.data.username + ' has disconnected.', 'SYSTEM');
-    users.splice(users.indexOf(socket.id),1); // delete socket on disconnect
-    console.log(users);
-    io.emit('update users', users.map(socket => socket.data.username));
-
-    io.emit('leaderboard info', users.map(user => ({
-      username: user.data.username,
-      guesserPoints: user.data.guesserPoints,
-      describerPoints: user.data.describerPoints
-    })));
-
+    roomGameMap[socket.data.roomname].disconnect(socket);
+    update(socket.data.roomname);
   });
 
   socket.on('chat message', (msg, username) => {
-    console.log('message: ' + msg + ' username: ' + username);
-    
-
-    if (gameStarting) {
-      if (randomWords.includes(msg.trim().toLowerCase())) {
-        console.log(msg, randomWords.indexOf(msg));
-        io.emit('chat message', msg, username, true, socket.id); // only send the message if it is right
-
-        const prevLength = correctWords.size;
-        correctWords.add(randomWords.indexOf(msg));
-
-        const afterLength = correctWords.size;
-
-        if (afterLength > prevLength) {
-          
-          socket.data.guesserPoints += 6;
-          users[playerTurn].data.describerPoints += 6;
-
-          console.log(socket.data.username, "got the gueseser points");
-          console.log(users[playerTurn].data.username, "got the describer points");
-
-
-          score += 6
-          io.emit('update headers', roundNum, score);
-
-          io.emit('leaderboard info', users.map(user => ({
-            username: user.data.username,
-            guesserPoints: user.data.guesserPoints,
-            describerPoints: user.data.describerPoints
-            // ... other necessary properties
-          })));
-
-        }
-        io.emit('correct words', Array.from(correctWords));
-      }
-      else {
-        io.emit('chat message', msg, username, false, socket.id); // only send the message if it is right
-      }
-    }
+    roomGameMap[socket.data.roomname].processChat(msg, username, io, socket.data.roomname, socket);
   });
-
-  
 
   socket.on('start game', () => {
-    console.log('start game', playerTurn);
-    correctWords.clear();
-    io.emit('correct words', Array.from(correctWords))
-    io.emit('describe words', []); // clears everyone board
-
-
-    getWords(DEFAULT_NUM_WORDS);
-
-
-
-    gameStarting = true;
-
-    roundNum += 1;
-    io.emit('update headers', roundNum, score);
-
-    io.emit('toggle button', false);
-    startGameTimer();
-
-
+    roomGameMap[socket.data.roomname].start(io, socket.data.roomname);
+    startGameTimer(socket.data.roomname);
   });
-
 });
 
 server.listen(3000, () => {

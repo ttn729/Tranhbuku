@@ -71,9 +71,10 @@
     loginForm.addEventListener('submit', function (e) {
       e.preventDefault();
       if (username && loginRoom) {
-        socket.emit('join', username.value);
+        socket.emit('join', username.value, loginRoom.value);
         game.style.display = 'block';
         document.getElementById('login').style.display = 'none';
+        socket.emit('request game state');
       }
     });
 
@@ -133,10 +134,6 @@
       socket.emit('start game')
     })
 
-    socket.on('connect', () => {
-      socket.emit('request game state');
-    })
-
     socket.on('leaderboard info', (users) => {
       var sortByGuesserPoints = users.sort((a, b) => b.guesserPoints - a.guesserPoints);
       var sortByDescriberPoints = users.sort((a, b) => b.describerPoints - a.describerPoints);
@@ -172,8 +169,7 @@
           listItems[i].classList.remove('highlighted');
         }
       }
-
-
+  
       console.log('player turn is: ', turn);
     });
 
@@ -227,7 +223,7 @@
 
       users.forEach(name => {
         const listItem = document.createElement('li');
-        if (name === username) {
+        if (name === username.value) {
           listItem.textContent = "*" + name;
         }
         else {
@@ -256,6 +252,7 @@
     })
 
     socket.on('describe words', function (describeWords) {
+      console.log("Hiiii we should be getting the describe words", describeWords);
       generateCards(describeWords);
       console.log(describeWords);
     });
