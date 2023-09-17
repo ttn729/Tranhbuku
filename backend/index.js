@@ -12,7 +12,6 @@ const DEFAULT_TURN_TIME = 120;
 const vietnamese = fs.readFileSync('vietnamese.txt', 'utf-8').toString();
 const english = fs.readFileSync('vocab.txt', 'utf-8').toString();
 
-
 class Game {
   constructor(vocab) {
     this.words = vocab.split('\n').map(line => line.trim().toLowerCase());
@@ -50,26 +49,22 @@ class Game {
     io.to(roomname).emit('toggle button', false);
 
     this.getWords(DEFAULT_NUM_WORDS);
-    console.log(this.randomWords);
     io.to(roomGameMap[roomname].users[roomGameMap[roomname].playerTurn].id).emit('describe words', this.randomWords);
   }
 
   getWords(numWords) {
-    console.log("We called getWords", numWords);
     this.randomWords = [];
     for (let i = 0; i < numWords; ++i) {
       this.randomWords.push(this.words[Math.floor(Math.random() * this.words.length)]);
-      console.log(this.randomWords,i , numWords);
     }
-
   }
 
   processChat(msg, username, io, roomname, socket) {
-
     if (this.gameStarting) {
-      if (this.randomWords.includes(msg.trim().toLowerCase())) {
-        io.to(roomname).emit('chat message', msg, username, true, socket.id); // only send the message if it is right
+      const isCorrect = this.randomWords.includes(msg.trim().toLowerCase());
+      io.to(roomname).emit('chat message', msg, username, isCorrect, socket.id); // only send the message if it is right
 
+      if (isCorrect) {
         const prevLength = this.correctWords.size;
         this.correctWords.add(this.randomWords.indexOf(msg));
         const afterLength = this.correctWords.size;
@@ -83,12 +78,8 @@ class Game {
         }
 
         io.to(roomname).emit('correct words', Array.from(this.correctWords));
-      }
-      else {
-        io.to(roomname).emit('chat message', msg, username, false, socket.id); // only send the message if it is right
-      }
+      }    
     }
-
   }
 }
 
@@ -112,7 +103,6 @@ async function startGameTimer(roomname) {
     
       roomGameMap[roomname].skipTurn();
       io.to(roomname).emit('player turn', roomGameMap[roomname].playerTurn);
-
     }
     await delay(1000); // Wait for 1 second
   }
@@ -134,8 +124,11 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/public/index.html');
 });
 
-io.on('connection', (socket) => {
+app.get('/game', (req, res) => {
+  res.sendFile(__dirname + '/public/game.html');
+});
 
+io.on('connection', (socket) => {
   socket.on('request game state', () => {
     io.to(socket.data.roomname).emit('player turn', roomGameMap[socket.data.roomname].playerTurn);
     io.to(socket.data.roomname).emit('toggle button', !roomGameMap[socket.data.roomname].gameStarting);
@@ -148,7 +141,6 @@ io.on('connection', (socket) => {
     io.to(socket.data.roomname).emit('update headers', roomGameMap[socket.data.roomname].roundNum, roomGameMap[socket.data.roomname].score);
     io.to(socket.data.roomname).emit('describe words', []); // clears everyone board
   });
-
 
   socket.on('join', (username, roomname, language) => {
     socket.data.username = username;
@@ -192,7 +184,6 @@ io.on('connection', (socket) => {
       roomGameMap[socket.data.roomname].start(io, socket.data.roomname);
       startGameTimer(socket.data.roomname);
     }
-
   });
 });
 
