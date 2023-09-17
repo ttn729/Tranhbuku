@@ -52,6 +52,12 @@ class Game {
     io.to(roomGameMap[roomname].users[roomGameMap[roomname].playerTurn].id).emit('describe words', this.randomWords);
   }
 
+  getPlayerTurn() {
+    if (this.users[this.playerTurn]) {
+      return this.users[this.playerTurn].id;
+    }
+  }
+
   getWords(numWords) {
     this.randomWords = [];
     for (let i = 0; i < numWords; ++i) {
@@ -102,7 +108,7 @@ async function startGameTimer(roomname) {
       io.to(roomname).emit('correct words', Array.from(roomGameMap[roomname].correctWords))
     
       roomGameMap[roomname].skipTurn();
-      io.to(roomname).emit('player turn', roomGameMap[roomname].playerTurn);
+      io.to(roomname).emit('player turn', roomGameMap[roomname].getPlayerTurn());
     }
     await delay(1000); // Wait for 1 second
   }
@@ -112,11 +118,12 @@ function update(roomname) {
   io.to(roomname).emit('leaderboard info', roomGameMap[roomname].users.map(user => ({
     username: user.data.username,
     guesserPoints: user.data.guesserPoints,
-    describerPoints: user.data.describerPoints
+    describerPoints: user.data.describerPoints,
+    id: user.id,
   })));
   io.to(roomname).emit('update headers', roomGameMap[roomname].roundNum, roomGameMap[roomname].score);
   io.to(roomname).emit('update users', roomGameMap[roomname].users.map(socket => socket.data.username));
-  io.to(roomname).emit('player turn', roomGameMap[roomname].playerTurn);
+  io.to(roomname).emit('player turn', roomGameMap[roomname].getPlayerTurn());
 }
 
 app.use(express.static('public'));
@@ -130,7 +137,7 @@ app.get('/game', (req, res) => {
 
 io.on('connection', (socket) => {
   socket.on('request game state', () => {
-    io.to(socket.data.roomname).emit('player turn', roomGameMap[socket.data.roomname].playerTurn);
+    io.to(socket.data.roomname).emit('player turn', roomGameMap[socket.data.roomname].getPlayerTurn());
     io.to(socket.data.roomname).emit('toggle button', !roomGameMap[socket.data.roomname].gameStarting);
     io.to(socket.data.roomname).emit('update headers', roomGameMap[socket.data.roomname].roundNum, roomGameMap[socket.data.roomname].score);
   });
@@ -165,7 +172,7 @@ io.on('connection', (socket) => {
 
   socket.on('skip turn', () => {
     roomGameMap[socket.data.roomname].skipTurn();
-    io.to(socket.data.roomname).emit('player turn', roomGameMap[socket.data.roomname].playerTurn);
+    io.to(socket.data.roomname).emit('player turn', roomGameMap[socket.data.roomname].getPlayerTurn());
   })
 
   socket.on('disconnect', () => {

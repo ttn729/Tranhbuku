@@ -8,62 +8,59 @@
 
 <body>
 
-<div class="game" id="game">
-  <img src="./tranhbuku.png" alt="Tranhbuku Logo">
+  <div class="game" id="game">
+    <img src="./tranhbuku.png" alt="Tranhbuku Logo">
 
-  <div class="header-container">
-    <div class="header-info">
-      <h3 id="headers">Round: 0 Score: 0</h3>
-    </div>
-
-    <div id="timer" class="numberCircle">0</div>
-
-    <div class="header-buttons">
-      <button id="start-button" class="button button-blue">Start Game</button>
-      <button id="skip-button" class="button button-green">Skip Turn</button>
-      <button id="reset-button" class="button button-red">Reset</button>
-    </div>
-  </div>
-
-  <div id="describeWords">
-  </div>
-
-  <div id="chat-container">
-    <ul id="messages"></ul>
-    <div class="leaderboard">
-      <h1 class="leaderboard-title">Leaderboard</h1>
-
-      <div class="leaderboard-container">
-        <h3 id="guesser-board" class="guesser-board">Guessers</h3>
-        <h3 id="describer-board" class="describer-board">Describers</h3>
+    <div class="header-container">
+      <div class="header-info">
+        <h3 id="headers">Round: 0 Score: 0</h3>
       </div>
 
+      <div id="timer" class="numberCircle">0</div>
+
+      <div class="header-buttons">
+        <button id="start-button" class="button button-blue">Start Game</button>
+        <button id="skip-button" class="button button-green">Skip Turn</button>
+        <button id="reset-button" class="button button-red">Reset</button>
+      </div>
     </div>
-    <div id="left-panel">
-      <ul id="usersConnected">Users Connected</ul>
+
+    <div id="describeWords">
     </div>
+
+    <div id="chat-container">
+      <ul id="messages"></ul>
+      <div class="leaderboard">
+        <h1 class="leaderboard-title">Leaderboard</h1>
+
+        <div class="leaderboard-container">
+          <h3 id="guesser-board" class="guesser-board">Guessers</h3>
+          <h3 id="describer-board" class="describer-board">Describers</h3>
+        </div>
+
+      </div>
+    </div>
+
+    <form id="form" action="">
+      <input id="input" autocomplete="off" placeholder="Type the words you guess here" />
+      <button>Send</button>
+    </form>
   </div>
 
-  <form id="form" action="">
-    <input id="input" autocomplete="off" placeholder="Type the words you guess here" />
-    <button>Send</button>
-  </form>
- </div>
+  <div class="login" id="login">
+    <h1>Welcome to Tranhbuku!</h1>
+    <form id="login_form" action="">
+      <input id="login_name" autocomplete="off" placeholder="Name" />
+      <input id="login_room" autocomplete="off" placeholder="Room" />
 
- <div class="login" id="login">
-  <h1>Welcome to Tranhbuku!</h1>
-  <form id="login_form" action="">
-    <input id="login_name" autocomplete="off" placeholder="Name" />
-    <input id="login_room" autocomplete="off" placeholder="Room" />
+      <select id="language_select">
+        <option value="vi">Vietnamese</option>
+        <option value="en">English</option>
+      </select>
 
-    <select id="language_select">
-      <option value="vi">Vietnamese</option>
-      <option value="en">English</option>
-    </select>
-
-    <button>Enter Game!</button>
-  </form>
- </div>
+      <button>Enter Game!</button>
+    </form>
+  </div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
@@ -143,49 +140,70 @@
     })
 
     socket.on('leaderboard info', (users) => {
-      var sortByGuesserPoints = users.sort((a, b) => b.guesserPoints - a.guesserPoints);
-      var sortByDescriberPoints = users.sort((a, b) => b.describerPoints - a.describerPoints);
-
       var guesserBoard = document.getElementById('guesser-board');
       var describerBoard = document.getElementById('describer-board');
 
       guesserBoard.innerHTML = 'Guessers';
       describerBoard.innerHTML = 'Describers';
 
-      sortByGuesserPoints.forEach(user => {
+      users.forEach(user => {
         const userEntry = document.createElement('div');
-        userEntry.textContent = `${user.username}: ${user.guesserPoints}`;
+
+        if (user.username === username.value) {
+          userEntry.textContent = `*${user.username}: ${user.guesserPoints}`;
+        }
+        else {
+          userEntry.textContent = `${user.username}: ${user.guesserPoints}`;
+        }
+        userEntry.id = user.id;
         guesserBoard.appendChild(userEntry);
       });
 
 
-      sortByDescriberPoints.forEach(user => {
+      users.forEach(user => {
         const userEntry = document.createElement('div');
-        userEntry.textContent = `${user.username}: ${user.describerPoints}`;
+
+        if (user.username === username.value) {
+          userEntry.textContent = `*${user.username}: ${user.describerPoints}`;
+        }
+        else {
+          userEntry.textContent = `${user.username}: ${user.describerPoints}`;
+        }
+        userEntry.id = user.id;
         describerBoard.appendChild(userEntry);
       });
     });
 
     socket.on('player turn', function (turn) {
-      const usersConnected = document.getElementById('usersConnected');
-      const listItems = usersConnected.getElementsByTagName('li');
+      // const usersConnected = document.getElementById('usersConnected');
+      // const listItems = usersConnected.getElementsByTagName('li');
 
-      for (let i = 0; i < listItems.length; i++) {
-        if (i === turn) {
-          listItems[i].classList.add('highlighted');
-        } else {
-          listItems[i].classList.remove('highlighted');
+      // for (let i = 0; i < listItems.length; i++) {
+      //   if (i === turn) {
+      //     listItems[i].classList.add('highlighted');
+      //   } else {
+      //     listItems[i].classList.remove('highlighted');
+      //   }
+      // }
+
+      var describerBoard = document.getElementById('describer-board');
+      var divElements = describerBoard.querySelectorAll('div');
+
+
+      divElements.forEach(function (currentDiv) {
+        currentDiv.classList.remove('highlighted');
+        console.log(turn, currentDiv.innerText);
+        if (currentDiv.id === turn) {
+          currentDiv.classList.add('highlighted');
         }
-      }
-  
-      console.log('player turn is: ', turn);
+      });
     });
 
     // Create a data structure to track existing user chats and their <li> elements
     var userChats = {};
 
     socket.on('chat message', function (msg, username, highlight, socketId) {
-      console.log("The username is",username);
+      console.log("The username is", username);
       var textElement_name = document.createElement('span');
       textElement_name.textContent = username + ": ";
 
@@ -223,23 +241,6 @@
       }
     });
 
-
-    socket.on('update users', function (users) {
-      console.log('Users are ', users);
-      usersConnected.innerHTML = 'Users Connected';
-
-      users.forEach(name => {
-        const listItem = document.createElement('li');
-        if (name === username.value) {
-          listItem.textContent = "*" + name;
-        }
-        else {
-          listItem.textContent = name;
-        }
-
-        usersConnected.appendChild(listItem);
-      });
-    });
 
     socket.on('set timer', function (time) {
       timer.innerHTML = time;
