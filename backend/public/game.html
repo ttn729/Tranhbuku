@@ -48,19 +48,19 @@
   </div>
 
   <div class="login" id="login">
-    <h1>Welcome to Tranhbuku!</h1>
+    <img src="./tranhbuku.png" alt="Tranhbuku Logo">
     <form id="login_form" action="">
-      <input id="login_name" autocomplete="off" placeholder="Name" />
-      <input id="login_room" autocomplete="off" placeholder="Room" />
+      <input class="input_box" id="login_name" autocomplete="off" placeholder="Player Name" />
+      <input class="input_box" id="login_room" autocomplete="off" placeholder="Room Number" />
 
-      <select id="language_select">
+      <select id="language_select" class="input_box">
         <option value="vi">Vietnamese</option>
         <option value="en">English</option>
       </select>
 
-      <button>Enter Game!</button>
+      <button class="button button-red">Enter Game!</button>
     </form>
-  </div>
+  </div>  
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
@@ -76,7 +76,7 @@
 
     loginForm.addEventListener('submit', function (e) {
       e.preventDefault();
-      if (username && loginRoom) {
+      if (username.value.trim() !== "" && loginRoom.value.trim() !== "") {
         socket.emit('join', username.value, loginRoom.value, languageSelect.value);
         game.style.display = 'block';
         document.getElementById('login').style.display = 'none';
