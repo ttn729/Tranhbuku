@@ -167,8 +167,10 @@ io.on('connection', (socket) => {
   })
 
   socket.on('disconnect', () => {
-    roomGameMap[socket.data.roomname].disconnect(socket);
-    update(socket.data.roomname);
+    if (socket.data.roomname in roomGameMap) {
+      roomGameMap[socket.data.roomname].disconnect(socket);
+      update(socket.data.roomname);
+    }
   });
 
   socket.on('chat message', (msg, username) => {

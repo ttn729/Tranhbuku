@@ -177,7 +177,7 @@
     var userChats = {};
 
     socket.on('chat message', function (msg, username, highlight, socketId) {
-      console.log("The usernname is",username);
+      console.log("The username is",username);
       var textElement_name = document.createElement('span');
       textElement_name.textContent = username + ": ";
 
