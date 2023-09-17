@@ -7,7 +7,7 @@ const io = new Server(server);
 const fs = require('fs');
 
 const DEFAULT_NUM_WORDS = 20;
-const DEFAULT_TURN_TIME = 120;
+const DEFAULT_TURN_TIME = 10;
 
 const vietnamese = fs.readFileSync('vietnamese.txt', 'utf-8').toString();
 const english = fs.readFileSync('vocab.txt', 'utf-8').toString();
@@ -29,7 +29,7 @@ class Game {
   }
 
   disconnect(socket) {
-    this.users.splice(this.users.indexOf(socket.id), 1); // delete socket on disconnect
+    this.users = this.users.filter(user => user.id !== socket.id);
   }
 
   reset() {
@@ -103,12 +103,11 @@ async function startGameTimer(roomname) {
       roomGameMap[roomname].gameStarting = false;
       io.to(roomname).emit('toggle button', true);
 
-      console.log(roomGameMap[roomname].randomWords);
       io.to(roomname).emit('describe words', roomGameMap[roomname].randomWords);
       io.to(roomname).emit('correct words', Array.from(roomGameMap[roomname].correctWords))
     
       roomGameMap[roomname].skipTurn();
-      io.to(roomname).emit('player turn', roomGameMap[roomname].getPlayerTurn());
+      update(roomname);
     }
     await delay(1000); // Wait for 1 second
   }
@@ -120,10 +119,8 @@ function update(roomname) {
     guesserPoints: user.data.guesserPoints,
     describerPoints: user.data.describerPoints,
     id: user.id,
-  })));
+  })), roomGameMap[roomname].getPlayerTurn());
   io.to(roomname).emit('update headers', roomGameMap[roomname].roundNum, roomGameMap[roomname].score);
-  io.to(roomname).emit('update users', roomGameMap[roomname].users.map(socket => socket.data.username));
-  io.to(roomname).emit('player turn', roomGameMap[roomname].getPlayerTurn());
 }
 
 app.use(express.static('public'));
@@ -137,16 +134,16 @@ app.get('/game', (req, res) => {
 
 io.on('connection', (socket) => {
   socket.on('request game state', () => {
-    io.to(socket.data.roomname).emit('player turn', roomGameMap[socket.data.roomname].getPlayerTurn());
     io.to(socket.data.roomname).emit('toggle button', !roomGameMap[socket.data.roomname].gameStarting);
-    io.to(socket.data.roomname).emit('update headers', roomGameMap[socket.data.roomname].roundNum, roomGameMap[socket.data.roomname].score);
+    update(socket.data.roomname)
   });
 
   socket.on('reset game', () => {
-    roomGameMap[socket.data.roomname].reset();
-    io.to(socket.data.roomname).emit('player turn', 0);
-    io.to(socket.data.roomname).emit('update headers', roomGameMap[socket.data.roomname].roundNum, roomGameMap[socket.data.roomname].score);
-    io.to(socket.data.roomname).emit('describe words', []); // clears everyone board
+    if (socket.data.roomname in roomGameMap) {
+      roomGameMap[socket.data.roomname].reset();
+      update(socket.data.roomname);
+      io.to(socket.data.roomname).emit('describe words', []); // clears everyone board
+    }
   });
 
   socket.on('join', (username, roomname, language) => {
@@ -172,7 +169,7 @@ io.on('connection', (socket) => {
 
   socket.on('skip turn', () => {
     roomGameMap[socket.data.roomname].skipTurn();
-    io.to(socket.data.roomname).emit('player turn', roomGameMap[socket.data.roomname].getPlayerTurn());
+    update(socket.data.roomname);
   })
 
   socket.on('disconnect', () => {

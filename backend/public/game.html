@@ -139,7 +139,7 @@
       socket.emit('start game')
     })
 
-    socket.on('leaderboard info', (users) => {
+    socket.on('leaderboard info', (users, turn) => {
       var guesserBoard = document.getElementById('guesser-board');
       var describerBoard = document.getElementById('describer-board');
 
@@ -169,33 +169,16 @@
         else {
           userEntry.textContent = `${user.username}: ${user.describerPoints}`;
         }
+
+        if (user.id === turn) {
+          userEntry.classList.add('highlighted');
+        }
+        else {
+          userEntry.classList.remove('highlighted');
+        }
+
         userEntry.id = user.id;
         describerBoard.appendChild(userEntry);
-      });
-    });
-
-    socket.on('player turn', function (turn) {
-      // const usersConnected = document.getElementById('usersConnected');
-      // const listItems = usersConnected.getElementsByTagName('li');
-
-      // for (let i = 0; i < listItems.length; i++) {
-      //   if (i === turn) {
-      //     listItems[i].classList.add('highlighted');
-      //   } else {
-      //     listItems[i].classList.remove('highlighted');
-      //   }
-      // }
-
-      var describerBoard = document.getElementById('describer-board');
-      var divElements = describerBoard.querySelectorAll('div');
-
-
-      divElements.forEach(function (currentDiv) {
-        currentDiv.classList.remove('highlighted');
-        console.log(turn, currentDiv.innerText);
-        if (currentDiv.id === turn) {
-          currentDiv.classList.add('highlighted');
-        }
       });
     });
 
@@ -203,7 +186,6 @@
     var userChats = {};
 
     socket.on('chat message', function (msg, username, highlight, socketId) {
-      console.log("The username is", username);
       var textElement_name = document.createElement('span');
       textElement_name.textContent = username + ": ";
 
@@ -244,7 +226,6 @@
 
     socket.on('set timer', function (time) {
       timer.innerHTML = time;
-      // console.log(time);
     });
 
     socket.on('toggle button', function (enabled) {
@@ -256,13 +237,10 @@
 
     socket.on('update headers', function (round, score) {
       headers.innerHTML = 'Round: ' + round + ' Score: ' + score;
-      console.log(round, score);
     })
 
     socket.on('describe words', function (describeWords) {
-      console.log("Hiiii we should be getting the describe words", describeWords);
       generateCards(describeWords);
-      console.log(describeWords);
     });
 
     socket.on('correct words', function (indices) {
