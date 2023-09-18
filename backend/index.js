@@ -139,6 +139,11 @@ app.get('/game', (req, res) => {
   res.sendFile(__dirname + '/public/game.html');
 });
 
+app.get('/create', (req, res) => {
+  res.sendFile(__dirname + '/public/create.html');
+});
+
+
 io.on('connection', (socket) => {
   socket.on('request game state', () => {
     io.to(socket.data.roomname).emit('toggle button', !roomGameMap[socket.data.roomname].gameStarting);

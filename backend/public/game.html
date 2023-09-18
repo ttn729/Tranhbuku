@@ -3,7 +3,7 @@
 
 <head>
   <title>Tranhbuku</title>
-  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./game.css">
 </head>
 
 <body>
@@ -47,42 +47,48 @@
     </form>
   </div>
 
-  <div class="login" id="login">
-    <img src="./tranhbuku.png" alt="Tranhbuku Logo">
-    <form id="login_form" action="">
-      <input class="input_box" id="login_name" autocomplete="off" placeholder="Player Name" />
-      <input class="input_box" id="login_room" autocomplete="off" placeholder="Room Number" />
-
-      <select id="language_select" class="input_box">
-        <option value="vi">Vietnamese</option>
-        <option value="en">English</option>
-      </select>
-
-      <button class="button button-red">Enter Game!</button>
-    </form>
-  </div>  
-
   <script src="/socket.io/socket.io.js"></script>
   <script>
+
+
+    console.log(localStorage.getItem("username"));
+    console.log(localStorage.getItem("randomKey"));
+    console.log(localStorage.getItem("language"));
+    console.log(localStorage.getItem("room"));
+
     var socket = io();
 
-    var loginForm = document.getElementById('login_form');
-    var username = document.getElementById('login_name');
-    var loginRoom = document.getElementById('login_room');
-    var languageSelect = document.getElementById('language_select');
+    const username = localStorage.getItem("username");
+    const loginRoom = localStorage.getItem("room");
+    const languageSelect = localStorage.getItem("language");
+    const randomKey = localStorage.getItem("randomKey");
 
-    var game = document.getElementById('game');
-
-
-    loginForm.addEventListener('submit', function (e) {
-      e.preventDefault();
-      if (username.value.trim() !== "" && loginRoom.value.trim() !== "") {
-        socket.emit('join', username.value, loginRoom.value, languageSelect.value);
+    if (randomKey === null) {
+      window.location.href = "/";
+    }
+    else {
+        socket.emit('join', username, loginRoom, languageSelect, randomKey);
         game.style.display = 'block';
-        document.getElementById('login').style.display = 'none';
         socket.emit('request game state');
-      }
-    });
+    }
+
+
+    // var loginForm = document.getElementById('login_form');
+    // var username = document.getElementById('login_name');
+    // var loginRoom = document.getElementById('login_room');
+    // var languageSelect = document.getElementById('language_select');
+
+    // var game = document.getElementById('game');
+
+
+    // loginForm.addEventListener('submit', function (e) {
+    //   e.preventDefault();
+    //   if (username.value.trim() !== "" && loginRoom.value.trim() !== "") {
+    //     socket.emit('join', username.value, loginRoom.value, languageSelect.value);
+    //     game.style.display = 'block';
+    //     socket.emit('request game state');
+    //   }
+    // });
 
     var messages = document.getElementById('messages');
     var form = document.getElementById('form');
