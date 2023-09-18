@@ -7,7 +7,7 @@ const io = new Server(server);
 const fs = require('fs');
 
 const DEFAULT_NUM_WORDS = 20;
-const DEFAULT_TURN_TIME = 120;
+const DEFAULT_TURN_TIME = 10;
 
 const vietnamese = fs.readFileSync('vietnamese.txt', 'utf-8').toString();
 const english = fs.readFileSync('vocab.txt', 'utf-8').toString();
@@ -36,6 +36,12 @@ class Game {
     this.playerTurn = 0;
     this.roundNum = 0;
     this.score = 0;
+
+    // Loop through the array and set guess and describe properties to 0 for each user
+    for (let i = 0; i < this.users.length; i++) {
+      this.users[i].data.describerPoints = 0;
+      this.users[i].data.guesserPoints = 0;
+    }
   }
 
   start(io, roomname) {
@@ -85,7 +91,7 @@ class Game {
         }
 
         io.to(roomname).emit('correct words', Array.from(this.correctWords));
-      }    
+      }
     }
   }
 }
@@ -106,7 +112,7 @@ async function startGameTimer(roomname) {
 
       io.to(roomname).emit('describe words', roomGameMap[roomname].randomWords);
       io.to(roomname).emit('correct words', Array.from(roomGameMap[roomname].correctWords))
-    
+
       roomGameMap[roomname].skipTurn();
       update(roomname);
     }
