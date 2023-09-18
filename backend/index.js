@@ -1,3 +1,4 @@
+const favicon = require('serve-favicon');
 const express = require('express');
 const app = express();
 const http = require('http');
@@ -150,7 +151,12 @@ function update(roomname) {
   io.to(roomname).emit('update headers', roomGameMap[roomname].roundNum, roomGameMap[roomname].score);
 }
 
+
 app.use(express.static('public'));
+app.use(favicon(__dirname + '/public/favicon.ico'));
+
+
+
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/public/index.html');
 });
