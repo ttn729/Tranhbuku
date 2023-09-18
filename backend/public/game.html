@@ -67,28 +67,10 @@
       window.location.href = "/";
     }
     else {
-        socket.emit('join', username, loginRoom, languageSelect, randomKey);
+        socket.emit('create', username, loginRoom, languageSelect, randomKey);
         game.style.display = 'block';
         socket.emit('request game state');
     }
-
-
-    // var loginForm = document.getElementById('login_form');
-    // var username = document.getElementById('login_name');
-    // var loginRoom = document.getElementById('login_room');
-    // var languageSelect = document.getElementById('language_select');
-
-    // var game = document.getElementById('game');
-
-
-    // loginForm.addEventListener('submit', function (e) {
-    //   e.preventDefault();
-    //   if (username.value.trim() !== "" && loginRoom.value.trim() !== "") {
-    //     socket.emit('join', username.value, loginRoom.value, languageSelect.value);
-    //     game.style.display = 'block';
-    //     socket.emit('request game state');
-    //   }
-    // });
 
     var messages = document.getElementById('messages');
     var form = document.getElementById('form');

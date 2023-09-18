@@ -158,7 +158,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('join', (username, roomname, language) => {
+  socket.on('create', (username, roomname, language, randomKey) => {
     socket.data.username = username;
     socket.data.guesserPoints = 0;
     socket.data.describerPoints = 0;
