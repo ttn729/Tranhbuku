@@ -19,7 +19,7 @@
                 <option value="vi">Vietnamese</option>
                 <option value="en">English</option>
             </select>
-            <button class="button button-red" type="submit">Enter Game!</button>
+            <button class="button button-red" type="submit">Create Game!</button>
         </form>
     </div>
 
@@ -68,7 +68,7 @@
                     localStorage.setItem("room", room);
                     localStorage.setItem("language", language);
 
-                    socket.emit('create', username, room, language, randomKey);
+                    socket.emit('create', room, language);
                 }
                 else {
                     Toastify({

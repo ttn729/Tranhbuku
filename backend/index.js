@@ -191,9 +191,7 @@ io.on('connection', (socket) => {
     io.to(socket.id).emit('exists', roomname in roomGameMap);
   })
 
-  socket.on('create', (username, roomname, language, randomKey) => {
-    // joinGame(socket, username, roomname, randomKey);
-
+  socket.on('create', (roomname, language) => {
     if (!(roomname in roomGameMap)) {
       roomGameMap[roomname] = gameInstances[language];
       io.to(socket.id).emit('create success', true)
