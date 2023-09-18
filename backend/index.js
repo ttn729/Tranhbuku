@@ -9,8 +9,7 @@ const fs = require('fs');
 const DEFAULT_NUM_WORDS = 20;
 const DEFAULT_TURN_TIME = 10;
 
-const vietnamese = fs.readFileSync('vietnamese.txt', 'utf-8').toString();
-const english = fs.readFileSync('vocab.txt', 'utf-8').toString();
+
 
 class Game {
   constructor(vocab) {
@@ -96,7 +95,28 @@ class Game {
   }
 }
 
+const vietnamese = fs.readFileSync('vietnamese.txt', 'utf-8').toString();
+const english = fs.readFileSync('vocab.txt', 'utf-8').toString();
+
+const gameInstances = {
+  en: new Game(english),
+  vi: new Game(vietnamese),
+};
+
 var roomGameMap = {};
+
+function joinGame(socket, username, roomname, randomKey) {
+  socket.data.username = username;
+  socket.data.guesserPoints = 0;
+  socket.data.describerPoints = 0;
+
+  if (roomname in roomGameMap) {
+    socket.data.roomname = roomname;
+    socket.join(roomname);
+    roomGameMap[roomname].users.push(socket);
+    update(roomname);
+  }
+}
 
 async function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -143,11 +163,16 @@ app.get('/create', (req, res) => {
   res.sendFile(__dirname + '/public/create.html');
 });
 
+app.get('/join', (req, res) => {
+  res.sendFile(__dirname + '/public/join.html');
+});
 
 io.on('connection', (socket) => {
   socket.on('request game state', () => {
-    io.to(socket.data.roomname).emit('toggle button', !roomGameMap[socket.data.roomname].gameStarting);
-    update(socket.data.roomname)
+    if (socket.data.roomname in roomGameMap) {
+      io.to(socket.data.roomname).emit('toggle button', !roomGameMap[socket.data.roomname].gameStarting);
+      update(socket.data.roomname)
+    }
   });
 
   socket.on('reset game', () => {
@@ -158,25 +183,24 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('create', (username, roomname, language, randomKey) => {
-    socket.data.username = username;
-    socket.data.guesserPoints = 0;
-    socket.data.describerPoints = 0;
+  socket.on('join', (username, roomname, randomKey) => {
+    joinGame(socket, username, roomname, randomKey);
+  })
 
-    socket.data.roomname = roomname;
-    socket.join(roomname);
+  socket.on('exists', (roomname) => {
+    io.to(socket.id).emit('exists', roomname in roomGameMap);
+  })
+
+  socket.on('create', (username, roomname, language, randomKey) => {
+    // joinGame(socket, username, roomname, randomKey);
 
     if (!(roomname in roomGameMap)) {
-      if (language === 'en') {
-        roomGameMap[roomname] = new Game(english)
-      }
-      else if (language === 'vi') {
-        roomGameMap[roomname] = new Game(vietnamese)
-      }
+      roomGameMap[roomname] = gameInstances[language];
+      io.to(socket.id).emit('create success', true)
     }
-
-    roomGameMap[roomname].users.push(socket);
-    update(roomname);
+    else {
+      io.to(socket.id).emit('create success', false)
+    }
   });
 
   socket.on('skip turn', () => {

@@ -67,7 +67,7 @@
       window.location.href = "/";
     }
     else {
-        socket.emit('create', username, loginRoom, languageSelect, randomKey);
+        socket.emit('join', username, loginRoom, languageSelect, randomKey);
         game.style.display = 'block';
         socket.emit('request game state');
     }
