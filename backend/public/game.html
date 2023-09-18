@@ -151,7 +151,7 @@
       users.forEach(user => {
         const userEntry = document.createElement('div');
 
-        if (user.username === username.value) {
+        if (user.username === username) {
           userEntry.textContent = `*${user.username}: ${user.describerPoints}`;
         }
         else {
