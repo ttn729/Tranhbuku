@@ -37,6 +37,17 @@ h1 {
     font-size: 4vw;
     margin-left: auto;
     margin-right: auto;
+    transition: background-color 0.3s; /* Add a transition for smooth color change */
+    cursor: pointer; /* Change cursor to pointer on hover */
+}
+
+/* Add hover styles */
+.createButton:hover {
+    background-color: #04ea08; /* Change the background color on hover */
+}
+
+.joinButton:hover {
+    background-color: #ff02ea; /* Change the background color on hover */
 }
 
 

@@ -183,6 +183,7 @@ io.on('connection', (socket) => {
       roomGameMap[socket.data.roomname].reset();
       update(socket.data.roomname);
       io.to(socket.data.roomname).emit('describe words', []); // clears everyone board
+      io.to(socket.data.roomname).emit('clear messages'); // clears everyone messages
     }
   });
 
@@ -224,6 +225,7 @@ io.on('connection', (socket) => {
     if (socket.data.roomname in roomGameMap) {
       roomGameMap[socket.data.roomname].start(io, socket.data.roomname);
       startGameTimer(socket.data.roomname);
+      io.to(socket.data.roomname).emit('clear messages'); // clears everyone messages
     }
   });
 });

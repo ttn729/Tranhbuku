@@ -10,6 +10,7 @@
 
   <div class="game" id="game">
     <img src="./tranhbuku.png" alt="Tranhbuku Logo">
+    <p id="roomName"></p>
 
     <div class="header-container">
       <div class="header-info">
@@ -50,7 +51,8 @@
   <script src="/socket.io/socket.io.js"></script>
   <script>
 
-
+  var messages = document.getElementById('roomName');
+  messages.innerText = 'Room Name: ' + localStorage.getItem("room");
     console.log(localStorage.getItem("username"));
     console.log(localStorage.getItem("randomKey"));
     console.log(localStorage.getItem("language"));
@@ -117,12 +119,10 @@
     })
 
     resetButton.addEventListener('click', function (e) {
-      messages.innerHTML = '';
       socket.emit('reset game');
     })
 
     button.addEventListener('click', function (e) {
-      messages.innerHTML = '';
       userChats = {};
       socket.emit('start game')
     })
@@ -172,6 +172,10 @@
 
     // Create a data structure to track existing user chats and their <li> elements
     var userChats = {};
+
+    socket.on('clear messages', function() {
+      messages.innerHTML = '';
+    })
 
     socket.on('chat message', function (msg, username, highlight, socketId) {
       var textElement_name = document.createElement('span');
