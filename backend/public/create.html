@@ -10,14 +10,35 @@
 </head>
 
 <body>
+
     <div class="login" id="login">
         <img src="./tranhbuku.png" alt="Tranhbuku Logo">
+
         <form id="login_form">
             <input class="input_box" id="login_name" autocomplete="off" placeholder="Player Name" />
             <input class="input_box" id="login_room" autocomplete="off" placeholder="Room Number" />
+
+            <label for="language_select">Select word pack</label>
             <select id="language_select" class="input_box">
                 <option value="vi">Vietnamese</option>
                 <option value="en">English</option>
+            </select>
+
+            <label for="starting_time">Starting time</label>
+            <select id="starting_time" class="input_box">
+                <option value=120>2 minutes</option>
+                <option value=90>90 seconds</option>
+                <option value=60>60 seconds</option>
+                <option value=30>30 seconds</option>
+                <option value=10>10 seconds</option>
+            </select>
+
+            <label for="words_per_turn">Words per turn</label>
+            <select id="words_per_turn" class="input_box">
+                <option value=20>20</option>
+                <option value=15>15</option>
+                <option value=10>10</option>
+                <option value=5>5</option>
             </select>
             <button class="button button-red" type="submit">Create Game!</button>
         </form>
@@ -56,7 +77,8 @@
                 const username = document.getElementById("login_name").value;
                 const room = document.getElementById("login_room").value;
                 const language = document.getElementById("language_select").value;
-
+                const words_per_turn = document.getElementById("words_per_turn").value;
+                const starting_time = document.getElementById("starting_time").value;
 
                 // Generate a random key (for example, using a function)
                 const randomKey = generateRandomKey();
@@ -66,9 +88,8 @@
                     localStorage.setItem("username", username);
                     localStorage.setItem("randomKey", randomKey);
                     localStorage.setItem("room", room);
-                    localStorage.setItem("language", language);
 
-                    socket.emit('create', room, language);
+                    socket.emit('create', room, language, words_per_turn, starting_time);
                 }
                 else {
                     Toastify({

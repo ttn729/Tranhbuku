@@ -7,13 +7,8 @@ const { Server } = require("socket.io");
 const io = new Server(server);
 const fs = require('fs');
 
-const DEFAULT_NUM_WORDS = 20;
-const DEFAULT_TURN_TIME = 10;
-
-
-
 class Game {
-  constructor(vocab) {
+  constructor(vocab, wordsPerTurn, startingTime) {
     this.words = vocab.split('\n').map(line => line.trim().toLowerCase());
     this.randomWords = [];
     this.users = [];
@@ -22,6 +17,8 @@ class Game {
     this.roundNum = 0;
     this.score = 0;
     this.playerTurn = 0;
+    this.wordsPerTurn = wordsPerTurn;
+    this.startingTime = startingTime;
   }
 
   skipTurn() {
@@ -54,7 +51,7 @@ class Game {
     io.to(roomname).emit('update headers', this.roundNum, this.score);
     io.to(roomname).emit('toggle button', false);
 
-    this.getWords(DEFAULT_NUM_WORDS);
+    this.getWords(this.wordsPerTurn);
     io.to(roomGameMap[roomname].users[roomGameMap[roomname].playerTurn].id).emit('describe words', this.randomWords);
   }
 
@@ -100,8 +97,8 @@ const vietnamese = fs.readFileSync('vietnamese.txt', 'utf-8').toString();
 const english = fs.readFileSync('vocab.txt', 'utf-8').toString();
 
 const gameInstances = {
-  en: new Game(english),
-  vi: new Game(vietnamese),
+  en: (wordsPerTurn, startingTime) => new Game(english, wordsPerTurn, startingTime),
+  vi: (wordsPerTurn, startingTime) => new Game(vietnamese, wordsPerTurn, startingTime),
 };
 
 var roomGameMap = {};
@@ -124,7 +121,7 @@ async function delay(ms) {
 }
 
 async function startGameTimer(roomname) {
-  for (let i = DEFAULT_TURN_TIME; i >= 0; i--) {
+  for (let i = roomGameMap[roomname].startingTime; i >= 0; i--) {
     io.to(roomname).emit('set timer', i);
 
     if (i === 0) {
@@ -197,9 +194,9 @@ io.on('connection', (socket) => {
     io.to(socket.id).emit('exists', roomname in roomGameMap);
   })
 
-  socket.on('create', (roomname, language) => {
+  socket.on('create', (roomname, language, words_per_turn, starting_time) => {
     if (!(roomname in roomGameMap)) {
-      roomGameMap[roomname] = gameInstances[language];
+      roomGameMap[roomname] = gameInstances[language](words_per_turn, starting_time);
       io.to(socket.id).emit('create success', true)
     }
     else {

@@ -13,13 +13,45 @@ body {
 .login {
     display: flex;
     flex-direction: column;
-    align-items: center; /* Center horizontally */
-    justify-content: center; /* Center vertically */
-    height: 100vh; /* Make the div full viewport height for vertical centering */
+    align-items: center;
+    /* Center horizontally */
+    justify-content: center;
+    /* Center vertically */
+    height: 100vh;
+    /* Make the div full viewport height for vertical centering */
+}
+
+#login_form {
+    width: 300px;
+    margin: 0 auto;
+    text-align: center;
 }
 
 .input_box {
     font-size: large;
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* Style select elements */
+select.input_box {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+}
+
+/* Style labels */
+label {
+    display: block;
+    text-align: left;
+    margin-bottom: 5px;
+    font-weight: bold;
 }
 
 .button {
@@ -78,7 +110,7 @@ body {
     /* You can choose any color you prefer */
 }
 
-.wrong { 
+.wrong {
     background-color: gray;
 }
 
@@ -134,7 +166,8 @@ body {
     display: flex;
 }
 
-.guesser-board, .describer-board {
+.guesser-board,
+.describer-board {
     flex: 1;
     float: left;
     padding: 0px 20px;
