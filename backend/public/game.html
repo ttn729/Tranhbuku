@@ -112,17 +112,9 @@
       }
     });
 
-    skipButton.addEventListener('click', function (e) {
-      socket.emit('skip turn');
-    })
-
-    resetButton.addEventListener('click', function (e) {
-      socket.emit('reset game');
-    })
-
-    button.addEventListener('click', function (e) {
-      socket.emit('start game')
-    })
+    skipButton.addEventListener('click', () => socket.emit('skip turn'));
+    resetButton.addEventListener('click', () => socket.emit('reset game'));
+    button.addEventListener('click', () => socket.emit('start game'));
 
     socket.on('leaderboard info', (users, turn) => {
       var guesserBoard = document.getElementById('guesser-board');
@@ -155,13 +147,7 @@
           userEntry.textContent = `${user.username}: ${user.describerPoints}`;
         }
 
-        if (user.id === turn) {
-          userEntry.classList.add('highlighted');
-        }
-        else {
-          userEntry.classList.remove('highlighted');
-        }
-
+        userEntry.classList.toggle('highlighted', user.id === turn);
         userEntry.id = user.id;
         describerBoard.appendChild(userEntry);
       });
@@ -212,9 +198,7 @@
       }
     });
 
-    socket.on('set timer', function (time) {
-      timer.innerHTML = time;
-    });
+    socket.on('set timer', time => timer.innerHTML = time);
 
     socket.on('toggle button', function (enabled) {
       button.disabled = !enabled;
@@ -226,17 +210,13 @@
       headers.innerHTML = 'Round: ' + round + ' Score: ' + score;
     })
 
-    socket.on('describe words', function (describeWords) {
-      generateCards(describeWords);
-    });
+    socket.on('describe words', describeWords => generateCards(describeWords));
 
     socket.on('correct words', function (indices) {
       const cards = document.querySelectorAll('.card'); // Get all card elements
 
-      cards.forEach((card, cardIndex) => {
-        // Toggle the 'highlighted' class based on whether the cardIndex is in the 'indices' array
-        card.classList.toggle('highlighted', indices.includes(cardIndex));
-      });
+      // Toggle the 'highlighted' class based on whether the cardIndex is in the 'indices' array
+      cards.forEach((card, cardIndex) => card.classList.toggle('highlighted', indices.includes(cardIndex)));
 
     });
 

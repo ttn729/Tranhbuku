@@ -31,9 +31,7 @@ function joinGame(socket, username, roomname, randomKey) {
   }
 }
 
-async function delay(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 async function startGameTimer(roomname) {
   for (let i = roomGameMap[roomname].startingTime; i >= 0; i--) {
@@ -77,7 +75,7 @@ io.on('connection', (socket) => {
   socket.on('request game state', () => {
     if (socket.data.roomname in roomGameMap) {
       io.to(socket.data.roomname).emit('toggle button', !roomGameMap[socket.data.roomname].gameStarting);
-      update(io, socket.data.roomname)
+      update(io, socket.data.roomname);
     }
   });
 
@@ -90,21 +88,16 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('join', (username, roomname, randomKey) => {
-    joinGame(socket, username, roomname, randomKey);
-  })
-
-  socket.on('exists', (roomname) => {
-    io.to(socket.id).emit('exists', roomname in roomGameMap);
-  })
+  socket.on('join', (username, roomname, randomKey) => joinGame(socket, username, roomname, randomKey));
+  
+  socket.on('exists', roomname => io.to(socket.id).emit('exists', roomname in roomGameMap));
 
   socket.on('create', (roomname, language, words_per_turn, starting_time) => {
-    if (!(roomname in roomGameMap)) {
+    if (roomname in roomGameMap) {
+      io.to(socket.id).emit('create success', false);
+    } else {
       roomGameMap[roomname] = gameInstances[language](words_per_turn, starting_time);
-      io.to(socket.id).emit('create success', true)
-    }
-    else {
-      io.to(socket.id).emit('create success', false)
+      io.to(socket.id).emit('create success', true);
     }
   });
 
@@ -123,13 +116,14 @@ io.on('connection', (socket) => {
   socket.on('chat message', (msg) => {
     const g = roomGameMap[socket.data.roomname];
     const roomname = socket.data.roomname;
+    
     if (g.gameStarting) {
       const isCorrect = g.randomWords.includes(msg.trim().toLowerCase());
       io.to(roomname).emit('chat message', msg, socket.data.username, isCorrect, socket.id); // only send the message if it is right
 
       if (isCorrect) {
         const prevLength = g.correctWords.size;
-        g.correctWords.add(g.randomWords.indexOf(msg));
+        g.correctWords.add(g.randomWords.indexOf(msg.trim().toLowerCase()));
         const afterLength = g.correctWords.size;
 
         if (afterLength > prevLength) {
@@ -161,6 +155,4 @@ io.on('connection', (socket) => {
   });
 });
 
-server.listen(3000, () => {
-  console.log('listening on *:3000');
-});
+server.listen(3000, () => console.log('listening on *:3000'));
