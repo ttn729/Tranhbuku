@@ -51,8 +51,8 @@
   <script src="/socket.io/socket.io.js"></script>
   <script>
 
-  var messages = document.getElementById('roomName');
-  messages.innerText = 'Room Name: ' + localStorage.getItem("room");
+    var messages = document.getElementById('roomName');
+    messages.innerText = 'Room Name: ' + localStorage.getItem("room");
     console.log(localStorage.getItem("username"));
     console.log(localStorage.getItem("randomKey"));
     console.log(localStorage.getItem("language"));
@@ -69,9 +69,9 @@
       window.location.href = "/";
     }
     else {
-        socket.emit('join', username, loginRoom, languageSelect, randomKey);
-        game.style.display = 'block';
-        socket.emit('request game state');
+      socket.emit('join', username, loginRoom, randomKey);
+      game.style.display = 'block';
+      socket.emit('request game state');
     }
 
     var messages = document.getElementById('messages');
@@ -99,8 +99,6 @@
         const cardContent = document.createElement('div');
         cardContent.classList.add('card-content'); // Style card content if needed
         cardContent.innerHTML = '<strong>' + word.toUpperCase() + '</strong>';
-
-
         card.appendChild(cardContent);
         describeWordsDiv.appendChild(card);
       }
@@ -108,7 +106,7 @@
 
     form.addEventListener('submit', function (e) {
       e.preventDefault();
-      if (input.value) {
+      if (input.value !== "") {
         socket.emit('chat message', input.value);
         input.value = '';
       }
@@ -123,7 +121,6 @@
     })
 
     button.addEventListener('click', function (e) {
-      userChats = {};
       socket.emit('start game')
     })
 
@@ -173,7 +170,8 @@
     // Create a data structure to track existing user chats and their <li> elements
     var userChats = {};
 
-    socket.on('clear messages', function() {
+    socket.on('clear messages', function () {
+      userChats = {};
       messages.innerHTML = '';
     })
 
@@ -214,7 +212,6 @@
       }
     });
 
-
     socket.on('set timer', function (time) {
       timer.innerHTML = time;
     });
@@ -237,12 +234,10 @@
       const cards = document.querySelectorAll('.card'); // Get all card elements
 
       cards.forEach((card, cardIndex) => {
-        if (indices.includes(cardIndex)) {
-          card.classList.add('highlighted'); // Apply the highlighted class to the correct cards
-        } else {
-          card.classList.remove('highlighted'); // Remove the highlighted class from other cards
-        }
+        // Toggle the 'highlighted' class based on whether the cardIndex is in the 'indices' array
+        card.classList.toggle('highlighted', indices.includes(cardIndex));
       });
+
     });
 
   </script>

@@ -6,95 +6,10 @@ const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
 const fs = require('fs');
-
-class Game {
-  constructor(vocab, wordsPerTurn, startingTime) {
-    this.words = vocab.split('\n').map(line => line.trim().toLowerCase());
-    this.randomWords = [];
-    this.users = [];
-    this.gameStarting = false;
-    this.correctWords = new Set();
-    this.roundNum = 0;
-    this.score = 0;
-    this.playerTurn = 0;
-    this.wordsPerTurn = wordsPerTurn;
-    this.startingTime = startingTime;
-  }
-
-  skipTurn() {
-    this.playerTurn = (this.playerTurn + 1) % this.users.length;
-  }
-
-  disconnect(socket) {
-    this.users = this.users.filter(user => user.id !== socket.id);
-  }
-
-  reset() {
-    this.playerTurn = 0;
-    this.roundNum = 0;
-    this.score = 0;
-
-    // Loop through the array and set guess and describe properties to 0 for each user
-    for (let i = 0; i < this.users.length; i++) {
-      this.users[i].data.describerPoints = 0;
-      this.users[i].data.guesserPoints = 0;
-    }
-  }
-
-  start(io, roomname) {
-    this.correctWords.clear();
-    this.gameStarting = true;
-    this.roundNum += 1;
-
-    io.to(roomname).emit('correct words', Array.from(this.correctWords))
-    io.to(roomname).emit('describe words', []); // clears everyone board
-    io.to(roomname).emit('update headers', this.roundNum, this.score);
-    io.to(roomname).emit('toggle button', false);
-
-    this.getWords(this.wordsPerTurn);
-    io.to(roomGameMap[roomname].users[roomGameMap[roomname].playerTurn].id).emit('describe words', this.randomWords);
-  }
-
-  getPlayerTurn() {
-    if (this.users[this.playerTurn]) {
-      return this.users[this.playerTurn].id;
-    }
-  }
-
-  getWords(numWords) {
-    this.randomWords = [];
-    for (let i = 0; i < numWords; ++i) {
-      this.randomWords.push(this.words[Math.floor(Math.random() * this.words.length)]);
-    }
-  }
-
-  processChat(msg, io, socket) {
-    var roomname = socket.data.roomname;
-    if (this.gameStarting) {
-      const isCorrect = this.randomWords.includes(msg.trim().toLowerCase());
-      io.to(roomname).emit('chat message', msg, socket.data.username, isCorrect, socket.id); // only send the message if it is right
-
-      if (isCorrect) {
-        const prevLength = this.correctWords.size;
-        this.correctWords.add(this.randomWords.indexOf(msg));
-        const afterLength = this.correctWords.size;
-
-        if (afterLength > prevLength) {
-          socket.data.guesserPoints += 6;
-          this.users[this.playerTurn].data.describerPoints += 6;
-          this.score += 6
-
-          update(roomname);
-        }
-
-        io.to(roomname).emit('correct words', Array.from(this.correctWords));
-      }
-    }
-  }
-}
+const { Game } = require('./Game')
 
 const vietnamese = fs.readFileSync('vietnamese.txt', 'utf-8').toString();
-const english = fs.readFileSync('vocab.txt', 'utf-8').toString();
+const english = fs.readFileSync('english.txt', 'utf-8').toString();
 
 const gameInstances = {
   en: (wordsPerTurn, startingTime) => new Game(english, wordsPerTurn, startingTime),
@@ -112,7 +27,7 @@ function joinGame(socket, username, roomname, randomKey) {
     socket.data.roomname = roomname;
     socket.join(roomname);
     roomGameMap[roomname].users.push(socket);
-    update(roomname);
+    update(io, roomname);
   }
 }
 
@@ -132,13 +47,13 @@ async function startGameTimer(roomname) {
       io.to(roomname).emit('correct words', Array.from(roomGameMap[roomname].correctWords))
 
       roomGameMap[roomname].skipTurn();
-      update(roomname);
+      update(io, roomname);
     }
     await delay(1000); // Wait for 1 second
   }
 }
 
-function update(roomname) {
+function update(io, roomname) {
   io.to(roomname).emit('leaderboard info', roomGameMap[roomname].users.map(user => ({
     username: user.data.username,
     guesserPoints: user.data.guesserPoints,
@@ -148,40 +63,28 @@ function update(roomname) {
   io.to(roomname).emit('update headers', roomGameMap[roomname].roundNum, roomGameMap[roomname].score);
 }
 
-
 app.use(express.static('public'));
 app.use(favicon(__dirname + '/public/favicon.ico'));
 
+// Routes
+app.get('/', (req, res) => { res.sendFile(__dirname + '/public/index.html'); });
+app.get('/game', (req, res) => { res.sendFile(__dirname + '/public/game.html'); });
+app.get('/join', (req, res) => { res.sendFile(__dirname + '/public/join.html'); });
+app.get('/create', (req, res) => { res.sendFile(__dirname + '/public/create.html'); });
 
-
-app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/public/index.html');
-});
-
-app.get('/game', (req, res) => {
-  res.sendFile(__dirname + '/public/game.html');
-});
-
-app.get('/create', (req, res) => {
-  res.sendFile(__dirname + '/public/create.html');
-});
-
-app.get('/join', (req, res) => {
-  res.sendFile(__dirname + '/public/join.html');
-});
 
 io.on('connection', (socket) => {
   socket.on('request game state', () => {
     if (socket.data.roomname in roomGameMap) {
       io.to(socket.data.roomname).emit('toggle button', !roomGameMap[socket.data.roomname].gameStarting);
-      update(socket.data.roomname)
+      update(io, socket.data.roomname)
     }
   });
 
   socket.on('reset game', () => {
     if (socket.data.roomname in roomGameMap) {
       roomGameMap[socket.data.roomname].reset();
-      update(socket.data.roomname);
+      update(io, socket.data.roomname);
       io.to(socket.data.roomname).emit('describe words', []); // clears everyone board
       io.to(socket.data.roomname).emit('clear messages'); // clears everyone messages
     }
@@ -207,25 +110,53 @@ io.on('connection', (socket) => {
 
   socket.on('skip turn', () => {
     roomGameMap[socket.data.roomname].skipTurn();
-    update(socket.data.roomname);
+    update(io, socket.data.roomname);
   })
 
   socket.on('disconnect', () => {
     if (socket.data.roomname in roomGameMap) {
       roomGameMap[socket.data.roomname].disconnect(socket);
-      update(socket.data.roomname);
+      update(io, socket.data.roomname);
     }
   });
 
   socket.on('chat message', (msg) => {
-    roomGameMap[socket.data.roomname].processChat(msg, io, socket);
+    const g = roomGameMap[socket.data.roomname];
+    const roomname = socket.data.roomname;
+    if (g.gameStarting) {
+      const isCorrect = g.randomWords.includes(msg.trim().toLowerCase());
+      io.to(roomname).emit('chat message', msg, socket.data.username, isCorrect, socket.id); // only send the message if it is right
+
+      if (isCorrect) {
+        const prevLength = g.correctWords.size;
+        g.correctWords.add(g.randomWords.indexOf(msg));
+        const afterLength = g.correctWords.size;
+
+        if (afterLength > prevLength) {
+          socket.data.guesserPoints += 6;
+          g.users[g.playerTurn].data.describerPoints += 6;
+          g.score += 6
+
+          update(io, roomname);
+        }
+        io.to(roomname).emit('correct words', Array.from(g.correctWords));
+      }
+    }
   });
 
   socket.on('start game', () => {
     if (socket.data.roomname in roomGameMap) {
-      roomGameMap[socket.data.roomname].start(io, socket.data.roomname);
-      startGameTimer(socket.data.roomname);
+      const roomname = socket.data.roomname;
+      const g = roomGameMap[roomname];
+
+      roomGameMap[socket.data.roomname].start();
+      io.to(roomname).emit('correct words', Array.from(g.correctWords))
+      io.to(roomname).emit('describe words', []); // clears everyone board
+      io.to(roomname).emit('update headers', g.roundNum, g.score);
+      io.to(roomname).emit('toggle button', false);
+      io.to(g.users[g.playerTurn].id).emit('describe words', g.randomWords);
       io.to(socket.data.roomname).emit('clear messages'); // clears everyone messages
+      startGameTimer(socket.data.roomname);
     }
   });
 });
