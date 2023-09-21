@@ -43,7 +43,7 @@ async function startGameTimer(roomname) {
 
       io.to(roomname).emit('describe words', roomGameMap[roomname].randomWords);
       io.to(roomname).emit('correct words', Array.from(roomGameMap[roomname].correctWords))
-
+      io.to(roomname).emit('end game');
       roomGameMap[roomname].skipTurn();
       update(io, roomname);
     }

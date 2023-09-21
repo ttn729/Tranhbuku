@@ -4,6 +4,7 @@
 <head>
   <title>Tranhbuku</title>
   <link rel="stylesheet" href="./game.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.css">
 </head>
 
 <body>
@@ -49,6 +50,7 @@
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
   <script>
 
     var messages = document.getElementById('roomName');
@@ -112,6 +114,7 @@
       }
     });
 
+
     skipButton.addEventListener('click', () => socket.emit('skip turn'));
     resetButton.addEventListener('click', () => socket.emit('reset game'));
     button.addEventListener('click', () => socket.emit('start game'));
@@ -128,8 +131,7 @@
 
         if (user.username === username.value) {
           userEntry.textContent = `*${user.username}: ${user.guesserPoints}`;
-        }
-        else {
+        } else {
           userEntry.textContent = `${user.username}: ${user.guesserPoints}`;
         }
         userEntry.id = user.id;
@@ -142,8 +144,7 @@
 
         if (user.username === username) {
           userEntry.textContent = `*${user.username}: ${user.describerPoints}`;
-        }
-        else {
+        } else {
           userEntry.textContent = `${user.username}: ${user.describerPoints}`;
         }
 
@@ -170,8 +171,7 @@
 
       if (highlight) {
         textElement_message.classList.add('highlighted');
-      }
-      else {
+      } else {
         textElement_message.classList.add('wrong');
       }
 
@@ -199,6 +199,16 @@
     });
 
     socket.on('set timer', time => timer.innerHTML = time);
+
+    socket.on('end game', function () {
+      Toastify({
+        text: "End game",
+        duration: 3000, // Duration in milliseconds
+        close: true, // Whether to show a close button
+        gravity: "top", // Toast position (top, center, bottom)
+        position: "center", // Toast position (left, center, right)
+      }).showToast();
+    })
 
     socket.on('toggle button', function (enabled) {
       button.disabled = !enabled;
